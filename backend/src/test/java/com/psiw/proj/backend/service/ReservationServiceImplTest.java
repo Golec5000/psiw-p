@@ -7,6 +7,7 @@ import com.psiw.proj.backend.repository.SeatRepository;
 import com.psiw.proj.backend.repository.TicketRepository;
 import com.psiw.proj.backend.repository.TicketSeatRepository;
 import com.psiw.proj.backend.utils.TicketStatus;
+import com.psiw.proj.backend.utils.responseDto.TicketResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -48,49 +49,45 @@ class ReservationServiceImplTest {
         Long screeningId = 1L;
         List<Long> seatIds = List.of(100L, 101L);
 
-        Room room = Room.builder()
-                .roomNumber(5L)
-                .build();
+        Room room = Room.builder().roomNumber(5L).build();
+        Movie movie = Movie.builder().title("Matrix").build();
+
         Screening screening = Screening.builder()
                 .id(screeningId)
                 .room(room)
+                .movie(movie)
+                .startTime(LocalDateTime.of(2025, 5, 22, 20, 0))
+                .duration(Duration.ofMinutes(120))
                 .build();
 
-        Seat seat1 = Seat.builder()
-                .id(100L)
-                .room(room)
-                .build();
+        Seat seat1 = Seat.builder().id(100L).rowNumber(1).columnNumber(2).room(room).build();
+        Seat seat2 = Seat.builder().id(101L).rowNumber(1).columnNumber(3).room(room).build();
 
-        Seat seat2 = Seat.builder()
-                .id(101L)
-                .room(room)
-                .build();
-
-        //when
         when(screeningRepository.findById(screeningId)).thenReturn(Optional.of(screening));
         when(seatRepository.countByIdInAndRoomRoomNumber(seatIds, room.getRoomNumber())).thenReturn(2L);
         when(ticketRepository.findAllByScreeningId(screeningId)).thenReturn(List.of());
-
-        Ticket savedTicket = Ticket.builder()
-                .ticketNumber(UUID.fromString("6cb796ab-1cba-44ed-9cdf-6ca17cf9eb76"))
-                .build();
-        when(ticketRepository.save(any())).thenReturn(savedTicket);
         when(seatRepository.findAllById(seatIds)).thenReturn(List.of(seat1, seat2));
+        when(ticketRepository.save(any())).thenAnswer(inv -> {
+            Ticket t = inv.getArgument(0);
+            t.setTicketNumber(UUID.randomUUID());
+            return t;
+        });
 
-        Ticket result = reservationService.reserveSeats(screeningId, seatIds);
+        // when
+        TicketResponse response = reservationService.reserveSeats(screeningId, seatIds);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.getTicketSeats()).hasSize(2);
+        assertThat(response).isNotNull();
+        assertThat(response.movieTitle()).isEqualTo("Matrix");
+        assertThat(response.screeningStartTime()).isEqualTo(screening.getStartTime());
+        assertThat(response.seatNumbers()).containsExactlyInAnyOrder("R1C2", "R1C3");
         verify(ticketSeatRepository, times(1)).saveAll(anyList());
     }
 
     @Test
     void shouldThrowExceptionWhenScreeningNotFound() {
-        // given
         when(screeningRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // when & then
         assertThatThrownBy(() -> reservationService.reserveSeats(1L, List.of(1L)))
                 .isInstanceOf(ScreeningNotFoundException.class)
                 .hasMessageContaining("Screening not found");
@@ -98,53 +95,34 @@ class ReservationServiceImplTest {
 
     @Test
     void shouldThrowWhenSeatsAreNotFromSameRoom() {
-        // given
         Long screeningId = 2L;
-        Screening screening = Screening.builder().id(screeningId).room(Room.builder().roomNumber(99L).build()).build();
+        Room room = Room.builder().roomNumber(99L).build();
+        Screening screening = Screening.builder().id(screeningId).room(room).build();
+
         when(screeningRepository.findById(screeningId)).thenReturn(Optional.of(screening));
+        when(seatRepository.countByIdInAndRoomRoomNumber(List.of(1L, 2L), 99L)).thenReturn(1L); // tylko 1 pasuje
 
-        List<Long> seatIds = List.of(1L, 2L);
-        when(seatRepository.countByIdInAndRoomRoomNumber(seatIds, 99L)).thenReturn(1L); // tylko 1 pasuje
-
-        // when & then
-        assertThatThrownBy(() -> reservationService.reserveSeats(screeningId, seatIds))
+        assertThatThrownBy(() -> reservationService.reserveSeats(screeningId, List.of(1L, 2L)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("One or more seats not found");
     }
 
     @Test
     void shouldThrowWhenAnySeatIsAlreadyTaken() {
-        // given
         Long screeningId = 3L;
         List<Long> seatIds = List.of(10L, 11L);
 
-        Room room = Room.builder()
-                .roomNumber(1L)
-                .build();
+        Room room = Room.builder().roomNumber(1L).build();
+        Screening screening = Screening.builder().id(screeningId).room(room).build();
 
-        Screening screening = Screening.builder()
-                .id(screeningId)
-                .room(room)
-                .build();
+        Seat seat = Seat.builder().id(10L).build();
+        TicketSeat ts = TicketSeat.builder().seat(seat).build();
+        Ticket ticket = Ticket.builder().ticketSeats(List.of(ts)).build();
 
         when(screeningRepository.findById(screeningId)).thenReturn(Optional.of(screening));
         when(seatRepository.countByIdInAndRoomRoomNumber(seatIds, room.getRoomNumber())).thenReturn(2L);
-
-        Seat seat = Seat.builder()
-                .id(10L)
-                .build();
-
-        TicketSeat ts = TicketSeat.builder()
-                .seat(seat)
-                .build();
-
-        Ticket ticket = Ticket.builder()
-                .ticketSeats(List.of(ts))
-                .build();
-
         when(ticketRepository.findAllByScreeningId(screeningId)).thenReturn(List.of(ticket));
 
-        // when & then
         assertThatThrownBy(() -> reservationService.reserveSeats(screeningId, seatIds))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Seats already taken");
@@ -152,26 +130,20 @@ class ReservationServiceImplTest {
 
     @Test
     void shouldSaveTicketWithCorrectValues() {
-        // given
         Long screeningId = 4L;
         List<Long> seatIds = List.of(101L, 102L);
         Room room = Room.builder().roomNumber(77L).build();
+        Movie movie = Movie.builder().title("John Wick").build();
         Screening screening = Screening.builder()
                 .id(screeningId)
                 .room(room)
-                .startTime(LocalDateTime.now())
-                .duration(Duration.ofMinutes(100))
+                .movie(movie)
+                .startTime(LocalDateTime.of(2025, 6, 1, 18, 30))
+                .duration(Duration.ofMinutes(110))
                 .build();
 
-        Seat seat1 = Seat.builder()
-                .id(101L)
-                .room(room)
-                .build();
-
-        Seat seat2 = Seat.builder()
-                .id(102L)
-                .room(room)
-                .build();
+        Seat seat1 = Seat.builder().id(101L).rowNumber(2).columnNumber(1).room(room).build();
+        Seat seat2 = Seat.builder().id(102L).rowNumber(2).columnNumber(2).room(room).build();
 
         when(screeningRepository.findById(screeningId)).thenReturn(Optional.of(screening));
         when(seatRepository.countByIdInAndRoomRoomNumber(seatIds, room.getRoomNumber())).thenReturn(2L);
@@ -186,12 +158,14 @@ class ReservationServiceImplTest {
         });
 
         // when
-        Ticket result = reservationService.reserveSeats(screeningId, seatIds);
+        TicketResponse response = reservationService.reserveSeats(screeningId, seatIds);
 
         // then
         Ticket saved = ticketCaptor.getValue();
         assertThat(saved.getScreening()).isEqualTo(screening);
         assertThat(saved.getStatus()).isEqualTo(TicketStatus.VALID);
-        assertThat(result.getTicketSeats()).hasSize(2);
+        assertThat(response.seatNumbers()).containsExactlyInAnyOrder("R2C1", "R2C2");
+        assertThat(response.movieTitle()).isEqualTo("John Wick");
+        assertThat(response.screeningStartTime()).isEqualTo(screening.getStartTime());
     }
 }

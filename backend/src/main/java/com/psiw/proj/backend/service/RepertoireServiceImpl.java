@@ -16,6 +16,7 @@ import com.psiw.proj.backend.utils.responseDto.helpers.RoomDto;
 import com.psiw.proj.backend.utils.responseDto.helpers.ScreeningSummaryDto;
 import com.psiw.proj.backend.utils.responseDto.helpers.SeatDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class RepertoireServiceImpl implements RepertoireService {
 
@@ -34,13 +36,14 @@ public class RepertoireServiceImpl implements RepertoireService {
 
     @Override
     public List<MovieResponse> getMoviesWithScreeningsForDate(LocalDate date) {
+        log.info("Fetching movies with screenings for date: {}", date);
         LocalDateTime from = date.atStartOfDay();
         LocalDateTime to = date.plusDays(1).atStartOfDay();
 
-        // Jedno wywołanie do bazy
         List<Movie> movies = movieRepository.findDistinctByScreeningsStartTimeBetween(from, to);
+        log.debug("Found {} movies with screenings between {} and {}", movies.size(), from, to);
 
-        return movies.stream()
+        List<MovieResponse> responses = movies.stream()
                 .map(m -> new MovieResponse(
                         m.getId(),
                         m.getTitle(),
@@ -55,18 +58,28 @@ public class RepertoireServiceImpl implements RepertoireService {
                                 .toList()
                 ))
                 .toList();
-    }
 
+        log.info("Returning {} movie responses", responses.size());
+        return responses;
+    }
 
     @Override
     public ScreeningDetailsResponse getScreeningDetails(Long screeningId) {
+        log.info("Fetching screening details for screeningId: {}", screeningId);
         Screening s = screeningRepository.findByIdWithRoomAndMovie(screeningId)
-                .orElseThrow(() -> new ScreeningNotFoundException("Screening not found"));
+                .orElseThrow(() -> {
+                    log.error("Screening not found for id: {}", screeningId);
+                    return new ScreeningNotFoundException("Screening not found");
+                });
 
         Set<Long> taken = ticketSeatRepository.findTakenSeatIds(screeningId);
+        log.debug("Taken seat ids for screening {}: {}", screeningId, taken);
 
         List<Seat> seatList = Optional.ofNullable(s.getRoom().getSeats())
-                .orElseThrow(() -> new RoomHasNoSeatsException("Room has no seats defined"));
+                .orElseThrow(() -> {
+                    log.error("Room has no seats defined for screeningId: {}", screeningId);
+                    return new RoomHasNoSeatsException("Room has no seats defined");
+                });
 
         List<SeatDto> seats = seatList.stream()
                 .map(seat -> new SeatDto(
@@ -77,6 +90,7 @@ public class RepertoireServiceImpl implements RepertoireService {
                 ))
                 .toList();
 
+        log.info("Returning screening details for screeningId: {}", screeningId);
         return new ScreeningDetailsResponse(
                 s.getId(),
                 new MovieSimpleDto(s.getMovie().getId(), s.getMovie().getTitle()),
@@ -86,6 +100,4 @@ public class RepertoireServiceImpl implements RepertoireService {
                 seats
         );
     }
-
-
 }
