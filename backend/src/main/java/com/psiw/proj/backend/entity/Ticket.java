@@ -1,40 +1,44 @@
 package com.psiw.proj.backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.psiw.proj.backend.utils.TicketStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ticket",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"screening_id", "seat_id"})
-        })
+@Table(name = "ticket", indexes = {
+        @Index(name = "idx_ticket_ticket_number_unq", columnList = "ticket_number", unique = true)
+})
 @Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Ticket {
+
     @Id
+    @Column(name = "ticket_number")
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID ticketNumber;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(nullable = false)
-    private TicketStatus status = TicketStatus.DONT_EXIST;
+    private TicketStatus status = TicketStatus.INVALID;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screening_id", nullable = false)
-    @JsonBackReference("screening-tickets")
     private Screening screening;
 
-    @ManyToOne
-    @JoinColumn(name = "seat_id", nullable = false)
-    @JsonManagedReference("seat-tickets")
-    private Seat seat;
+    /**
+     * Jeden Ticket → wiele TicketSeat
+     */
+    @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @JsonManagedReference("ticket-ticketSeats")
+    private List<TicketSeat> ticketSeats = new ArrayList<>();
 }

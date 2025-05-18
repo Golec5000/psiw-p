@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -31,14 +33,16 @@ public class DBInit {
     public void init() {
         if (roomRepository.count() > 0) return; // avoid duplicates
 
-        // 1. Create 3 rooms with different sizes
+        // 1. Create rooms with different sizes
         List<Room> rooms = roomRepository.saveAll(List.of(
                 Room.builder().rowCount(5).columnCount(5).build(),
                 Room.builder().rowCount(8).columnCount(10).build(),
-                Room.builder().rowCount(6).columnCount(7).build()
+                Room.builder().rowCount(6).columnCount(7).build(),
+                Room.builder().rowCount(10).columnCount(12).build(),
+                Room.builder().rowCount(4).columnCount(6).build()
         ));
 
-        // 2. Generate all seats using flatMap + streams
+        // 2. Generate all seats for each room
         List<Seat> allSeats = rooms.stream()
                 .flatMap(room -> IntStream.rangeClosed(1, room.getRowCount())
                         .boxed()
@@ -49,7 +53,6 @@ public class DBInit {
                                         .room(room)
                                         .build())))
                 .toList();
-
         seatRepository.saveAll(allSeats);
 
         // 3. Create sample movies
@@ -57,33 +60,35 @@ public class DBInit {
                 Movie.builder().title("Inception").description("Sci-fi thriller").image("inception.jpg").build(),
                 Movie.builder().title("The Matrix").description("Virtual reality action").image("matrix.jpg").build(),
                 Movie.builder().title("Interstellar").description("Space-time journey").image("interstellar.jpg").build(),
-                Movie.builder().title("The Dark Knight").description("Gotham vigilante").image("dark_knight.jpg").build()
+                Movie.builder().title("The Dark Knight").description("Gotham vigilante").image("dark_knight.jpg").build(),
+                Movie.builder().title("Avatar").description("Epic science fiction").image("avatar.jpg").build(),
+                Movie.builder().title("Parasite").description("Thriller from Korea").image("parasite.jpg").build()
         ));
 
-        // 4. Generate 3 screenings per movie using streams
-        AtomicInteger screeningIndex = new AtomicInteger();
-        List<Screening> screenings = movies.stream()
-                .flatMap(movie -> IntStream.range(0, 3)
-                        .mapToObj(i -> {
-                            int index = screeningIndex.getAndIncrement();
-                            Room room = rooms.get(index % rooms.size());
-                            LocalDateTime start = LocalDateTime.now()
-                                    .plusDays(i + 1)
-                                    .withHour(14 + i * 2)
-                                    .withMinute(0);
+        // 4. Generate screenings for next 3 days, two per movie per day, rotating rooms
+        List<Screening> screenings = new ArrayList<>();
+        LocalDate startDate = LocalDate.now().plusDays(1);
+        AtomicInteger roomIndex = new AtomicInteger();
 
-                            return Screening.builder()
-                                    .movie(movie)
-                                    .room(room)
-                                    .startTime(start)
-                                    .duration(Duration.ofMinutes(120 + (i * 10L)))
-                                    .build();
-                        }))
-                .toList();
+        movies.forEach(movie -> {
+            for (int day = 0; day < 3; day++) {
+                for (int slot = 0; slot < 2; slot++) {
+                    Room room = rooms.get(roomIndex.getAndIncrement() % rooms.size());
+                    LocalDateTime startTime = startDate.plusDays(day)
+                            .atTime(12 + slot * 3, 0);
 
+                    screenings.add(Screening.builder()
+                            .movie(movie)
+                            .room(room)
+                            .startTime(startTime)
+                            .duration(Duration.ofMinutes(120 + slot * 10L))
+                            .build());
+                }
+            }
+        });
         screeningRepository.saveAll(screenings);
 
-        System.out.println("✅ Database fully initialized with:");
+        System.out.println("✅ Database initialized with:");
         System.out.println("- " + rooms.size() + " rooms");
         System.out.println("- " + allSeats.size() + " seats");
         System.out.println("- " + movies.size() + " movies");

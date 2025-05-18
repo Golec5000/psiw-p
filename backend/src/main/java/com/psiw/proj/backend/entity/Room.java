@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -28,12 +29,14 @@ public class Room {
     @Min(1)
     private int columnCount;
 
-    @OneToMany(mappedBy = "room")
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     @JsonManagedReference("room-seats")
-    private List<Seat> seats;
+    private List<Seat> seats = new ArrayList<>();
 
-    @OneToMany(mappedBy = "room")
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     @JsonManagedReference("room-screenings")
-    private List<Screening> screenings;
+    private List<Screening> screenings = new ArrayList<>();
 }
 

@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -37,7 +38,13 @@ public class Screening {
     @JsonBackReference("room-screenings")
     private Room room;
 
-    @OneToMany(mappedBy = "screening")
+    @OneToMany(mappedBy = "screening", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     @JsonManagedReference("screening-tickets")
-    private List<Ticket> tickets;
+    private List<Ticket> tickets = new ArrayList<>();
+
+    @OneToMany(mappedBy = "screening", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @JsonManagedReference("screening-ticketSeats")
+    private List<TicketSeat> ticketSeats = new ArrayList<>();
 }
