@@ -10,6 +10,7 @@ import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -54,7 +55,10 @@ class SeatRepositoryTest {
     @Test
     void shouldReturnLowerCountWhenSomeSeatsDoNotExist() {
         // given
-        Room room = Room.builder().rowCount(5).columnCount(5).build();
+        Room room = Room.builder()
+                .rowCount(5)
+                .columnCount(5)
+                .build();
         entityManager.persist(room);
 
         Seat seat1 = createSeat(room, 1);
@@ -111,6 +115,8 @@ class SeatRepositoryTest {
                 .room(room)
                 .rowNumber(1)
                 .columnNumber(col)
+                .seatNumber(col)
+                .seatPrice(BigDecimal.valueOf(1.0))
                 .build();
     }
 }

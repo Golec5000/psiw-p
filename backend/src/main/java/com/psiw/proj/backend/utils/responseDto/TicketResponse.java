@@ -2,15 +2,19 @@ package com.psiw.proj.backend.utils.responseDto;
 
 import com.psiw.proj.backend.utils.TicketStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 public record TicketResponse(
-        List<String> seatNumbers,
+        List<Integer> seatNumbers,
         String movieTitle,
         LocalDateTime screeningStartTime,
         UUID ticketId,
-        TicketStatus status
+        TicketStatus status,
+        String email,
+        String ticket_owner,
+        BigDecimal price
 ) {
 }

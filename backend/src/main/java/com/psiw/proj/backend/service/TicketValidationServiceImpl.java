@@ -66,14 +66,23 @@ public class TicketValidationServiceImpl implements TicketValidationService {
     }
 
     TicketResponse mapToTicketResponse(Ticket ticket) {
-        List<String> seatNumbers = ticket.getTicketSeats().stream()
-                .map(seat -> String.format("R%dC%d", seat.getSeat().getRowNumber(), seat.getSeat().getColumnNumber()))
+        List<Integer> seatNumbers = ticket.getTicketSeats().stream()
+                .map(screening -> screening.getSeat().getSeatNumber())
                 .toList();
         String movieTitle = ticket.getScreening().getMovie().getTitle();
         LocalDateTime screeningStartTime = ticket.getScreening().getStartTime();
         UUID ticketId = ticket.getTicketNumber();
 
-        return new TicketResponse(seatNumbers, movieTitle, screeningStartTime, ticketId, ticket.getStatus());
+        return new TicketResponse(
+                seatNumbers,
+                movieTitle,
+                screeningStartTime,
+                ticketId,
+                ticket.getStatus(),
+                ticket.getOwnerEmail(),
+                ticket.getOwnerName() + " " + ticket.getOwnerSurname(),
+                ticket.getTicketPrice()
+        );
     }
 
     private Ticket findExistingTicket(UUID ticketNumber) {

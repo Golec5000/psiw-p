@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,6 +31,8 @@ public class DBInit {
     private final RoomRepository roomRepository;
     private final ScreeningRepository screeningRepository;
     private final MovieRepository movieRepository;
+
+    public static final BigDecimal DEFAULT_SEAT_PRICE = new BigDecimal("25.00");
 
     @PostConstruct
     public void init() {
@@ -57,6 +60,8 @@ public class DBInit {
                                 .mapToObj(col -> Seat.builder()
                                         .rowNumber(row)
                                         .columnNumber(col)
+                                        .seatNumber((row - 1) * room.getColumnCount() + col) // sequential seat number
+                                        .seatPrice(DEFAULT_SEAT_PRICE)
                                         .room(room)
                                         .build())))
                 .toList();

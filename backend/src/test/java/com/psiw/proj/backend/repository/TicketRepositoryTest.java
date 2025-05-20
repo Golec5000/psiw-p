@@ -10,6 +10,7 @@ import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,8 +33,8 @@ class TicketRepositoryTest {
         Room room = Room.builder().rowCount(5).columnCount(5).build();
         entityManager.persist(room);
 
-        Seat seat1 = createSeat(room, 1);
-        Seat seat2 = createSeat(room, 2);
+        Seat seat1 = createSeat(room, 1, 1);
+        Seat seat2 = createSeat(room, 2, 2);
         entityManager.persist(seat1);
         entityManager.persist(seat2);
 
@@ -55,6 +56,10 @@ class TicketRepositoryTest {
         Ticket ticket = Ticket.builder()
                 .screening(screening)
                 .status(TicketStatus.VALID)
+                .ownerEmail("test@gmail.com")
+                .ownerName("John")
+                .ownerSurname("Doe")
+                .ticketPrice(BigDecimal.TEN)
                 .build();
         entityManager.persist(ticket);
 
@@ -111,11 +116,13 @@ class TicketRepositoryTest {
         assertThat(tickets).isEmpty();
     }
 
-    private Seat createSeat(Room room, int col) {
+    private Seat createSeat(Room room, int col, int seatNumber) {
         return Seat.builder()
                 .room(room)
                 .rowNumber(1)
                 .columnNumber(col)
+                .seatNumber(seatNumber)
+                .seatPrice(BigDecimal.TEN)
                 .build();
     }
 

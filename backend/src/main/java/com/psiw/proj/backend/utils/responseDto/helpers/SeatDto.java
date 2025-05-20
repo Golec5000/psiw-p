@@ -7,5 +7,6 @@ public record SeatDto(
         Long id,
         int rowNumber,
         int columnNumber,
+        int seatNumber,
         boolean available
 ) {}

@@ -10,13 +10,13 @@ import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
@@ -46,8 +46,19 @@ class TicketSeatRepositoryTest {
     @Test
     void shouldAllowSameSeatForDifferentScreenings() {
         // given
-        Room room = roomRepository.save(Room.builder().rowCount(10).columnCount(10).build());
-        Seat seat = seatRepository.save(Seat.builder().rowNumber(5).columnNumber(6).room(room).build());
+        Room room = roomRepository.save(Room.builder()
+                .rowCount(10)
+                .columnCount(10)
+                .build());
+
+        // zapewniamy seatNumber i seatPrice
+        Seat seat = seatRepository.save(Seat.builder()
+                .rowNumber(5)
+                .columnNumber(6)
+                .seatNumber(56)
+                .seatPrice(BigDecimal.valueOf(20.0))
+                .room(room)
+                .build());
 
         Movie movie = movieRepository.save(Movie.builder()
                 .title("Matrix")
@@ -59,7 +70,7 @@ class TicketSeatRepositoryTest {
         Screening screening1 = screeningRepository.save(Screening.builder()
                 .movie(movie)
                 .room(room)
-                .startTime(LocalDateTime.now().withHour(18).withMinute(0))
+                .startTime(LocalDateTime.now().withHour(18).withMinute(0).withSecond(0).withNano(0))
                 .duration(Duration.ofMinutes(120))
                 .build());
 
@@ -67,13 +78,17 @@ class TicketSeatRepositoryTest {
         Screening screening2 = screeningRepository.save(Screening.builder()
                 .movie(movie)
                 .room(room)
-                .startTime(LocalDateTime.now().withHour(20).withMinute(0))
+                .startTime(LocalDateTime.now().withHour(20).withMinute(0).withSecond(0).withNano(0))
                 .duration(Duration.ofMinutes(120))
                 .build());
 
         // Rezerwacja miejsca R5C6 na seans 1
         Ticket ticket1 = ticketRepository.save(Ticket.builder()
                 .screening(screening1)
+                .ticketPrice(BigDecimal.valueOf(15.0))
+                .ownerName("John")
+                .ownerSurname("Doe")
+                .ownerEmail("john.doe@example.com")
                 .status(TicketStatus.VALID)
                 .build());
 
@@ -86,6 +101,10 @@ class TicketSeatRepositoryTest {
         // Rezerwacja tego samego miejsca na seans 2
         Ticket ticket2 = ticketRepository.save(Ticket.builder()
                 .screening(screening2)
+                .ticketPrice(BigDecimal.valueOf(15.0))
+                .ownerName("Jane")
+                .ownerSurname("Smith")
+                .ownerEmail("jane.smith@example.com")
                 .status(TicketStatus.VALID)
                 .build());
 
@@ -107,33 +126,61 @@ class TicketSeatRepositoryTest {
         assertThat(takenSeatsScreening2).containsExactly(seat.getId());
     }
 
-
     @Test
     void shouldReturnSeatIdsTakenForGivenScreening() {
         // given
-        Room room = Room.builder().rowCount(5).columnCount(5).build();
-        roomRepository.save(room);
+        Room room = roomRepository.save(Room.builder()
+                .rowCount(5)
+                .columnCount(5)
+                .build());
 
-        Seat seat1 = Seat.builder().rowNumber(1).columnNumber(1).room(room).build();
-        Seat seat2 = Seat.builder().rowNumber(1).columnNumber(2).room(room).build();
-        seatRepository.saveAll(List.of(seat1, seat2));
+        Seat seat1 = seatRepository.save(Seat.builder()
+                .rowNumber(1)
+                .columnNumber(1)
+                .seatNumber(11)
+                .seatPrice(BigDecimal.valueOf(12.5))
+                .room(room)
+                .build());
+        Seat seat2 = seatRepository.save(Seat.builder()
+                .rowNumber(1)
+                .columnNumber(2)
+                .seatNumber(12)
+                .seatPrice(BigDecimal.valueOf(12.5))
+                .room(room)
+                .build());
 
-        Movie movie = Movie.builder().title("Taken").description("...").image("poster.jpg").build();
-        movieRepository.save(movie);
+        Movie movie = movieRepository.save(Movie.builder()
+                .title("Taken")
+                .description("...")
+                .image("poster.jpg")
+                .build());
 
-        Screening screening = Screening.builder()
+        Screening screening = screeningRepository.save(Screening.builder()
                 .movie(movie)
                 .room(room)
                 .startTime(LocalDateTime.now().plusDays(1))
                 .duration(Duration.ofMinutes(120))
+                .build());
+
+        Ticket ticket = ticketRepository.save(Ticket.builder()
+                .screening(screening)
+                .ticketPrice(BigDecimal.valueOf(10.0))
+                .ownerName("Alice")
+                .ownerSurname("Wonderland")
+                .ownerEmail("alice@example.com")
+                .status(TicketStatus.VALID)
+                .build());
+
+        TicketSeat ts1 = TicketSeat.builder()
+                .screening(screening)
+                .seat(seat1)
+                .ticket(ticket)
                 .build();
-        screeningRepository.save(screening);
-
-        Ticket ticket = Ticket.builder().screening(screening).status(TicketStatus.VALID).build();
-        ticketRepository.save(ticket);
-
-        TicketSeat ts1 = TicketSeat.builder().screening(screening).seat(seat1).ticket(ticket).build();
-        TicketSeat ts2 = TicketSeat.builder().screening(screening).seat(seat2).ticket(ticket).build();
+        TicketSeat ts2 = TicketSeat.builder()
+                .screening(screening)
+                .seat(seat2)
+                .ticket(ticket)
+                .build();
         ticketSeatRepository.saveAll(List.of(ts1, ts2));
 
         entityManager.flush();
@@ -149,17 +196,22 @@ class TicketSeatRepositoryTest {
     @Test
     void shouldReturnEmptySetIfNoTicketsForScreening() {
         // given
-        Movie movie = movieRepository.save(Movie.builder().title("Empty").description("...").image("img").build());
-        Room room = roomRepository.save(Room.builder().rowCount(3).columnCount(3).build());
+        Movie movie = movieRepository.save(Movie.builder()
+                .title("Empty")
+                .description("...")
+                .image("img")
+                .build());
+        Room room = roomRepository.save(Room.builder()
+                .rowCount(3)
+                .columnCount(3)
+                .build());
 
-        Screening screening = screeningRepository.save(
-                Screening.builder()
-                        .movie(movie)
-                        .room(room)
-                        .startTime(LocalDateTime.now().plusDays(2))
-                        .duration(Duration.ofMinutes(90))
-                        .build()
-        );
+        Screening screening = screeningRepository.save(Screening.builder()
+                .movie(movie)
+                .room(room)
+                .startTime(LocalDateTime.now().plusDays(2))
+                .duration(Duration.ofMinutes(90))
+                .build());
 
         entityManager.flush();
         entityManager.clear();
@@ -186,18 +238,50 @@ class TicketSeatRepositoryTest {
     @Test
     void shouldHandleMixedScreeningsGracefully() {
         // setup: create 2 screenings, one with seats, one without
-        Room room = roomRepository.save(Room.builder().rowCount(5).columnCount(5).build());
-        Movie movie = movieRepository.save(Movie.builder().title("Multi").description("..").image("x").build());
+        Room room = roomRepository.save(Room.builder()
+                .rowCount(5)
+                .columnCount(5)
+                .build());
+        Movie movie = movieRepository.save(Movie.builder()
+                .title("Multi")
+                .description("..")
+                .image("x")
+                .build());
 
         Screening s1 = screeningRepository.save(Screening.builder()
-                .movie(movie).room(room).startTime(LocalDateTime.now().plusDays(1)).duration(Duration.ofMinutes(120)).build());
+                .movie(movie)
+                .room(room)
+                .startTime(LocalDateTime.now().plusDays(1))
+                .duration(Duration.ofMinutes(120))
+                .build());
 
         Screening s2 = screeningRepository.save(Screening.builder()
-                .movie(movie).room(room).startTime(LocalDateTime.now().plusDays(2)).duration(Duration.ofMinutes(100)).build());
+                .movie(movie)
+                .room(room)
+                .startTime(LocalDateTime.now().plusDays(2))
+                .duration(Duration.ofMinutes(100))
+                .build());
 
-        Seat seat = seatRepository.save(Seat.builder().rowNumber(1).columnNumber(1).room(room).build());
-        Ticket ticket = ticketRepository.save(Ticket.builder().screening(s1).status(TicketStatus.VALID).build());
-        ticketSeatRepository.save(TicketSeat.builder().screening(s1).seat(seat).ticket(ticket).build());
+        Seat seat = seatRepository.save(Seat.builder()
+                .rowNumber(1)
+                .columnNumber(1)
+                .seatNumber(11)
+                .seatPrice(BigDecimal.valueOf(15.0))
+                .room(room)
+                .build());
+        Ticket ticket = ticketRepository.save(Ticket.builder()
+                .screening(s1)
+                .ticketPrice(BigDecimal.valueOf(15.0))
+                .ownerName("Bob")
+                .ownerSurname("Builder")
+                .ownerEmail("bob@example.com")
+                .status(TicketStatus.VALID)
+                .build());
+        ticketSeatRepository.save(TicketSeat.builder()
+                .screening(s1)
+                .seat(seat)
+                .ticket(ticket)
+                .build());
 
         entityManager.flush();
         entityManager.clear();
@@ -214,40 +298,51 @@ class TicketSeatRepositoryTest {
     @Test
     void shouldReturnEmptySetWhenTicketSeatsAreForOtherScreenings() {
         // given
-        Room room = roomRepository.save(Room.builder().rowCount(3).columnCount(3).build());
-        Movie movie = movieRepository.save(Movie.builder().title("Mismatch").description("..").image("a").build());
+        Room room = roomRepository.save(Room.builder()
+                .rowCount(3)
+                .columnCount(3)
+                .build());
+        Movie movie = movieRepository.save(Movie.builder()
+                .title("Mismatch")
+                .description("..")
+                .image("a")
+                .build());
 
-        // Screening, dla którego będziemy sprawdzać wynik
-        Screening targetScreening = screeningRepository.save(
-                Screening.builder()
-                        .room(room)
-                        .movie(movie)
-                        .startTime(LocalDateTime.now())
-                        .duration(Duration.ofMinutes(100))
-                        .build()
-        );
+        Screening targetScreening = screeningRepository.save(Screening.builder()
+                .movie(movie)
+                .room(room)
+                .startTime(LocalDateTime.now())
+                .duration(Duration.ofMinutes(100))
+                .build());
 
-        // Drugi screening, do którego przypiszemy miejsca
-        Screening otherScreening = screeningRepository.save(
-                Screening.builder()
-                        .room(room)
-                        .movie(movie)
-                        .startTime(LocalDateTime.now().plusDays(1))
-                        .duration(Duration.ofMinutes(90))
-                        .build()
-        );
+        Screening otherScreening = screeningRepository.save(Screening.builder()
+                .movie(movie)
+                .room(room)
+                .startTime(LocalDateTime.now().plusDays(1))
+                .duration(Duration.ofMinutes(90))
+                .build());
 
-        Seat seat = seatRepository.save(Seat.builder().rowNumber(1).columnNumber(1).room(room).build());
-        Ticket ticket = ticketRepository.save(Ticket.builder().screening(otherScreening).status(TicketStatus.VALID).build());
+        Seat seat = seatRepository.save(Seat.builder()
+                .rowNumber(1)
+                .columnNumber(1)
+                .seatNumber(11)
+                .seatPrice(BigDecimal.valueOf(10.0))
+                .room(room)
+                .build());
+        Ticket ticket = ticketRepository.save(Ticket.builder()
+                .screening(otherScreening)
+                .ticketPrice(BigDecimal.valueOf(10.0))
+                .ownerName("Carl")
+                .ownerSurname("Johnson")
+                .ownerEmail("cj@example.com")
+                .status(TicketStatus.VALID)
+                .build());
 
-        // TicketSeat powiązany z innym screeningiem
-        ticketSeatRepository.save(
-                TicketSeat.builder()
-                        .screening(otherScreening)
-                        .ticket(ticket)
-                        .seat(seat)
-                        .build()
-        );
+        ticketSeatRepository.save(TicketSeat.builder()
+                .screening(otherScreening)
+                .ticket(ticket)
+                .seat(seat)
+                .build());
 
         entityManager.flush();
         entityManager.clear();
@@ -262,8 +357,17 @@ class TicketSeatRepositoryTest {
     @Test
     void shouldThrowExceptionWhenSameSeatAssignedToMultipleTicketsInSameScreening() {
         // given
-        Room room = roomRepository.save(Room.builder().rowCount(5).columnCount(5).build());
-        Seat seat = seatRepository.save(Seat.builder().rowNumber(5).columnNumber(6).room(room).build());
+        Room room = roomRepository.save(Room.builder()
+                .rowCount(5)
+                .columnCount(5)
+                .build());
+        Seat seat = seatRepository.save(Seat.builder()
+                .rowNumber(5)
+                .columnNumber(6)
+                .seatNumber(56)
+                .seatPrice(BigDecimal.valueOf(18.0))
+                .room(room)
+                .build());
 
         Movie movie = movieRepository.save(Movie.builder()
                 .title("Duplicated Seat")
@@ -278,17 +382,40 @@ class TicketSeatRepositoryTest {
                 .duration(Duration.ofMinutes(120))
                 .build());
 
-        Ticket ticket1 = ticketRepository.save(Ticket.builder().screening(screening).status(TicketStatus.VALID).build());
-        Ticket ticket2 = ticketRepository.save(Ticket.builder().screening(screening).status(TicketStatus.VALID).build());
+        Ticket ticket1 = ticketRepository.save(Ticket.builder()
+                .screening(screening)
+                .ticketPrice(BigDecimal.valueOf(18.0))
+                .ownerName("Dana")
+                .ownerSurname("Scully")
+                .ownerEmail("dana.scully@example.com")
+                .status(TicketStatus.VALID)
+                .build());
+        Ticket ticket2 = ticketRepository.save(Ticket.builder()
+                .screening(screening)
+                .ticketPrice(BigDecimal.valueOf(18.0))
+                .ownerName("Fox")
+                .ownerSurname("Mulder")
+                .ownerEmail("fox.mulder@example.com")
+                .status(TicketStatus.VALID)
+                .build());
 
         // zapis pierwszego przypisania miejsca
-        ticketSeatRepository.save(TicketSeat.builder().ticket(ticket1).screening(screening).seat(seat).build());
+        ticketSeatRepository.save(TicketSeat.builder()
+                .ticket(ticket1)
+                .screening(screening)
+                .seat(seat)
+                .build());
+
+        entityManager.flush();
+        entityManager.clear();
 
         // when + then – drugie przypisanie tego samego miejsca do innego biletu w tym samym seansie
         assertThatThrownBy(() ->
-                ticketSeatRepository.save(TicketSeat.builder().ticket(ticket2).screening(screening).seat(seat).build())
+                ticketSeatRepository.saveAndFlush(TicketSeat.builder()
+                        .ticket(ticket2)
+                        .screening(screening)
+                        .seat(seat)
+                        .build())
         ).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     }
-
-
 }

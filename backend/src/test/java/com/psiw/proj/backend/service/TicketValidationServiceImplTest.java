@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.psiw.proj.backend.utils.DBInit.DEFAULT_SEAT_PRICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -153,11 +154,14 @@ class TicketValidationServiceImplTest {
                 .build();
 
         TicketResponse ticketResponse = new TicketResponse(
-                List.of("R1C1"),
+                List.of(1),
                 "Expected Movie Title",
                 screening.getStartTime(),
                 ticketId,
-                TicketStatus.USED
+                TicketStatus.USED,
+                "example@gmail.com",
+                "John Doe",
+                DEFAULT_SEAT_PRICE
         );
 
         when(clock.instant()).thenReturn(fixedClock.instant());
@@ -175,6 +179,10 @@ class TicketValidationServiceImplTest {
         assertThat(result.seatNumbers()).isNotEmpty();
         assertThat(result.screeningStartTime()).isEqualTo(screening.getStartTime());
         assertThat(result.movieTitle()).isEqualTo("Expected Movie Title");
+        assertThat(result.status()).isEqualTo(TicketStatus.USED);
+        assertThat(result.email()).isEqualTo("example@gmail.com");
+        assertThat(result.ticket_owner()).isEqualTo("John Doe");
+        assertThat(result.price()).isEqualTo(DEFAULT_SEAT_PRICE);
     }
 
     @Test

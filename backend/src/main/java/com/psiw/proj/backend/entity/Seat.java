@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +36,12 @@ public class Seat {
     @Column(name = "column_number", nullable = false)
     @Min(value = 1, message = "Column number must be greater than 0")
     private int columnNumber;
+
+    @Column(name = "seat_number", nullable = false)
+    private int seatNumber;
+
+    @Column(name = "seat_price", nullable = false)
+    private BigDecimal seatPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_number", nullable = false)

@@ -12,6 +12,7 @@ import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -44,6 +45,8 @@ class ScreeningRepositoryTest {
                         .rowNumber(row)
                         .columnNumber(col)
                         .room(room)
+                        .seatPrice(BigDecimal.TEN)
+                        .seatNumber(row + col)
                         .build();
                 room.getSeats().add(seat);
                 entityManager.persist(seat);

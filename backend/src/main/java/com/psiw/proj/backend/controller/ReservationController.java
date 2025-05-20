@@ -20,7 +20,7 @@ public class ReservationController {
 
     @PostMapping("/confirm")
     public ResponseEntity<TicketResponse> confirmReservation(@RequestBody @Valid ReservationRequest reservationRequest) {
-        return ResponseEntity.ok(reservationService.reserveSeats(reservationRequest.screeningId(), reservationRequest.seatIds()));
+        return ResponseEntity.ok(reservationService.reserveSeats(reservationRequest));
     }
 
 }
