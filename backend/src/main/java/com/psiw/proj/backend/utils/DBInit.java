@@ -10,6 +10,7 @@ import com.psiw.proj.backend.repository.ScreeningRepository;
 import com.psiw.proj.backend.repository.SeatRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class DBInit {
 
@@ -31,7 +33,10 @@ public class DBInit {
 
     @PostConstruct
     public void init() {
-        if (roomRepository.count() > 0) return; // avoid duplicates
+        if (roomRepository.count() > 0) {
+            log.info("Database already initialized, skipping...");
+            return; // avoid duplicates
+        }
 
         // 1. Create rooms with different sizes
         List<Room> rooms = roomRepository.saveAll(List.of(
@@ -41,6 +46,8 @@ public class DBInit {
                 Room.builder().rowCount(10).columnCount(12).build(),
                 Room.builder().rowCount(4).columnCount(6).build()
         ));
+
+        log.info("Rooms found: {}", rooms.size());
 
         // 2. Generate all seats for each room
         List<Seat> allSeats = rooms.stream()
@@ -53,6 +60,7 @@ public class DBInit {
                                         .room(room)
                                         .build())))
                 .toList();
+        log.info("Seats found: {}", allSeats.size());
         seatRepository.saveAll(allSeats);
 
         // 3. Create sample movies
@@ -64,6 +72,8 @@ public class DBInit {
                 Movie.builder().title("Avatar").description("Epic science fiction").image("avatar.jpg").build(),
                 Movie.builder().title("Parasite").description("Thriller from Korea").image("parasite.jpg").build()
         ));
+
+        log.info("Movies found: {}", movies.size());
 
         // 4. Generate screenings for next 3 days, two per movie per day, rotating rooms
         List<Screening> screenings = new ArrayList<>();
@@ -83,16 +93,18 @@ public class DBInit {
                             .startTime(startTime)
                             .duration(Duration.ofMinutes(120 + slot * 10L))
                             .build());
+                    log.info("Screening created: {} in room {} at {}", movie.getTitle(), room.getRoomNumber(), startTime);
                 }
             }
         });
+        log.info("Screenings found: {}", screenings.size());
         screeningRepository.saveAll(screenings);
 
-        System.out.println("✅ Database initialized with:");
-        System.out.println("- " + rooms.size() + " rooms");
-        System.out.println("- " + allSeats.size() + " seats");
-        System.out.println("- " + movies.size() + " movies");
-        System.out.println("- " + screenings.size() + " screenings");
+        log.info("✅ Database initialized with:");
+        log.info("- {} rooms", rooms.size());
+        log.info("- {} seats", allSeats.size());
+        log.info("- {} movies", movies.size());
+        log.info("- {} screenings", screenings.size());
     }
 
 }

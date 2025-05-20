@@ -1,8 +1,8 @@
 package com.psiw.proj.backend.controller;
 
-import com.psiw.proj.backend.entity.Ticket;
 import com.psiw.proj.backend.service.interfaces.TicketValidationService;
 import com.psiw.proj.backend.utils.TicketStatus;
+import com.psiw.proj.backend.utils.responseDto.TicketResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +24,7 @@ public class TicketValidationController {
     }
 
     @PutMapping("/scan")
-    public ResponseEntity<Ticket> scanTicket(@RequestParam UUID ticketId) {
+    public ResponseEntity<TicketResponse> scanTicket(@RequestParam UUID ticketId) {
         return ResponseEntity.ok(ticketValidationService.scanTicket(ticketId));
     }
 

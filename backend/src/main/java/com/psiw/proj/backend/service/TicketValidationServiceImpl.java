@@ -5,6 +5,7 @@ import com.psiw.proj.backend.exeptions.custom.TicketNotFoundException;
 import com.psiw.proj.backend.repository.TicketRepository;
 import com.psiw.proj.backend.service.interfaces.TicketValidationService;
 import com.psiw.proj.backend.utils.TicketStatus;
+import com.psiw.proj.backend.utils.responseDto.TicketResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -46,7 +48,7 @@ public class TicketValidationServiceImpl implements TicketValidationService {
 
     @Override
     @Transactional
-    public Ticket scanTicket(UUID ticketNumber) {
+    public TicketResponse scanTicket(UUID ticketNumber) {
         log.info("Scanning ticket with number: {}", ticketNumber);
         TicketStatus status = checkTicket(ticketNumber);
         if (status != TicketStatus.VALID) {
@@ -58,11 +60,24 @@ public class TicketValidationServiceImpl implements TicketValidationService {
         ticket.setStatus(TicketStatus.USED);
         Ticket updatedTicket = ticketRepository.save(ticket);
         log.info("Ticket {} scanned successfully. Status set to USED.", ticketNumber);
-        return updatedTicket;
+
+        // Map Ticket to TicketResponse
+        return mapToTicketResponse(updatedTicket);
+    }
+
+    TicketResponse mapToTicketResponse(Ticket ticket) {
+        List<String> seatNumbers = ticket.getTicketSeats().stream()
+                .map(seat -> String.format("R%dC%d", seat.getSeat().getRowNumber(), seat.getSeat().getColumnNumber()))
+                .toList();
+        String movieTitle = ticket.getScreening().getMovie().getTitle();
+        LocalDateTime screeningStartTime = ticket.getScreening().getStartTime();
+        UUID ticketId = ticket.getTicketNumber();
+
+        return new TicketResponse(seatNumbers, movieTitle, screeningStartTime, ticketId, ticket.getStatus());
     }
 
     private Ticket findExistingTicket(UUID ticketNumber) {
-        log.debug("Finding ticket with number: {}", ticketNumber);
+        log.info("Finding ticket with number: {}", ticketNumber);
         return ticketRepository.findById(ticketNumber)
                 .orElseThrow(() -> {
                     log.error("Ticket not found: {}", ticketNumber);
@@ -72,7 +87,7 @@ public class TicketValidationServiceImpl implements TicketValidationService {
 
     private boolean isValid(Ticket ticket) {
         boolean valid = ticket.getStatus() == TicketStatus.VALID;
-        log.debug("Ticket {} valid status: {}", ticket.getTicketNumber(), valid);
+        log.info("Ticket {} valid status: {}", ticket.getTicketNumber(), valid);
         return valid;
     }
 
@@ -81,7 +96,7 @@ public class TicketValidationServiceImpl implements TicketValidationService {
         LocalDateTime start = ticket.getScreening().getStartTime();
         LocalDateTime end = start.plus(ticket.getScreening().getDuration());
         boolean expired = now.isAfter(end);
-        log.debug("Ticket {} expired check: now={}, end={}, expired={}", ticket.getTicketNumber(), now, end, expired);
+        log.info("Ticket {} expired check: now={}, end={}, expired={}", ticket.getTicketNumber(), now, end, expired);
         return expired;
     }
 }

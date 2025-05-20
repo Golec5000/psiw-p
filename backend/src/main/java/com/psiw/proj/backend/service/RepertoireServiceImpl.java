@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -41,7 +42,7 @@ public class RepertoireServiceImpl implements RepertoireService {
         LocalDateTime to = date.plusDays(1).atStartOfDay();
 
         List<Movie> movies = movieRepository.findDistinctByScreeningsStartTimeBetween(from, to);
-        log.debug("Found {} movies with screenings between {} and {}", movies.size(), from, to);
+        log.info("Found {} movies with screenings between {} and {}", movies.size(), from, to);
 
         List<MovieResponse> responses = movies.stream()
                 .map(m -> new MovieResponse(
@@ -73,7 +74,7 @@ public class RepertoireServiceImpl implements RepertoireService {
                 });
 
         Set<Long> taken = ticketSeatRepository.findTakenSeatIds(screeningId);
-        log.debug("Taken seat ids for screening {}: {}", screeningId, taken);
+        log.info("Taken seat ids for screening {}: {}", screeningId, taken);
 
         List<Seat> seatList = Optional.ofNullable(s.getRoom().getSeats())
                 .orElseThrow(() -> {

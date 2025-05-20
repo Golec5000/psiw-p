@@ -167,5 +167,6 @@ class ReservationServiceImplTest {
         assertThat(response.seatNumbers()).containsExactlyInAnyOrder("R2C1", "R2C2");
         assertThat(response.movieTitle()).isEqualTo("John Wick");
         assertThat(response.screeningStartTime()).isEqualTo(screening.getStartTime());
+        assertThat(response.status()).isEqualTo(TicketStatus.VALID);
     }
 }

@@ -1,5 +1,6 @@
 package com.psiw.proj.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.psiw.proj.backend.utils.TicketStatus;
 import jakarta.persistence.*;
@@ -31,6 +32,7 @@ public class Ticket {
     private TicketStatus status = TicketStatus.INVALID;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference("ticket-screening")
     @JoinColumn(name = "screening_id", nullable = false)
     private Screening screening;
 

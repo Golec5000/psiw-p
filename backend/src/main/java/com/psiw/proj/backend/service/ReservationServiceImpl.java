@@ -43,7 +43,7 @@ public class ReservationServiceImpl implements ReservationService {
                 });
 
         Long roomNo = screening.getRoom().getRoomNumber();
-        log.debug("Screening {} is in room {}", screeningId, roomNo);
+        log.info("Screening {} is in room {}", screeningId, roomNo);
 
         long matching = seatRepository.countByIdInAndRoomRoomNumber(seatIds, roomNo);
         if (matching != seatIds.size()) {
@@ -55,7 +55,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .flatMap(ticket -> ticket.getTicketSeats().stream())
                 .map(ts -> ts.getSeat().getId())
                 .collect(Collectors.toSet());
-        log.debug("Currently taken seats for screening {}: {}", screeningId, taken);
+        log.info("Currently taken seats for screening {}: {}", screeningId, taken);
 
         List<Long> conflict = seatIds.stream()
                 .filter(taken::contains)
@@ -85,7 +85,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .toList();
         ticketSeatRepository.saveAll(links);
         ticket.setTicketSeats(links);
-        log.debug("Linked ticket {} with seats {}", ticket.getTicketNumber(), seatIds);
+        log.info("Linked ticket {} with seats {}", ticket.getTicketNumber(), seatIds);
 
         List<String> seatNumbers = seats.stream()
                 .map(seat -> String.format("R%dC%d", seat.getRowNumber(), seat.getColumnNumber()))
@@ -95,7 +95,9 @@ public class ReservationServiceImpl implements ReservationService {
         return new TicketResponse(
                 seatNumbers,
                 screening.getMovie().getTitle(),
-                screening.getStartTime()
+                screening.getStartTime(),
+                ticket.getTicketNumber(),
+                ticket.getStatus()
         );
     }
 }
