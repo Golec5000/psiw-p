@@ -2,7 +2,7 @@ package com.psiw.proj.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.psiw.proj.backend.utils.TicketStatus;
+import com.psiw.proj.backend.utils.enums.TicketStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/psiw/api/v1/reservations")
+@RequestMapping("/psiw/api/v1/open/reservations")
 @RequiredArgsConstructor
 public class ReservationController {
 

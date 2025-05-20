@@ -1,6 +1,6 @@
 package com.psiw.proj.backend.service.interfaces;
 
-import com.psiw.proj.backend.utils.TicketStatus;
+import com.psiw.proj.backend.utils.enums.TicketStatus;
 import com.psiw.proj.backend.utils.responseDto.TicketResponse;
 
 import java.util.UUID;

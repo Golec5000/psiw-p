@@ -1,8 +1,14 @@
 package com.psiw.proj.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.psiw.proj.backend.utils.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name = "ticket_clerks", indexes = {
@@ -13,7 +19,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TicketClerk {
+public class TicketClerk implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,5 +34,20 @@ public class TicketClerk {
 
     @Column(nullable = false)
     private String fullName;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Role role = Role.ROLE_EMPLOYEE;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(role);
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
 
 }

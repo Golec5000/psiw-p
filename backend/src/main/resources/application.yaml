@@ -27,3 +27,9 @@ spring:
   docker:
     compose:
       file: ../compose.yaml
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          public-key: classpath:publicKey.pem
+          private-key: classpath:privateKey.pem

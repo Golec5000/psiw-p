@@ -6,7 +6,7 @@ import com.psiw.proj.backend.repository.ScreeningRepository;
 import com.psiw.proj.backend.repository.SeatRepository;
 import com.psiw.proj.backend.repository.TicketRepository;
 import com.psiw.proj.backend.repository.TicketSeatRepository;
-import com.psiw.proj.backend.utils.TicketStatus;
+import com.psiw.proj.backend.utils.enums.TicketStatus;
 import com.psiw.proj.backend.utils.requestDto.ReservationRequest;
 import com.psiw.proj.backend.utils.responseDto.TicketResponse;
 import org.junit.jupiter.api.Test;

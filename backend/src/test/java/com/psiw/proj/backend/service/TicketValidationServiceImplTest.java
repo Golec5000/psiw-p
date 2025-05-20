@@ -5,7 +5,7 @@ import com.psiw.proj.backend.entity.Screening;
 import com.psiw.proj.backend.entity.Ticket;
 import com.psiw.proj.backend.exeptions.custom.TicketNotFoundException;
 import com.psiw.proj.backend.repository.TicketRepository;
-import com.psiw.proj.backend.utils.TicketStatus;
+import com.psiw.proj.backend.utils.enums.TicketStatus;
 import com.psiw.proj.backend.utils.responseDto.TicketResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

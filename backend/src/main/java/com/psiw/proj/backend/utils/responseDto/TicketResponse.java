@@ -1,6 +1,6 @@
 package com.psiw.proj.backend.utils.responseDto;
 
-import com.psiw.proj.backend.utils.TicketStatus;
+import com.psiw.proj.backend.utils.enums.TicketStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

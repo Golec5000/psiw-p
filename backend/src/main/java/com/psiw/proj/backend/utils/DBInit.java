@@ -1,16 +1,11 @@
 package com.psiw.proj.backend.utils;
 
-import com.psiw.proj.backend.entity.Movie;
-import com.psiw.proj.backend.entity.Room;
-import com.psiw.proj.backend.entity.Screening;
-import com.psiw.proj.backend.entity.Seat;
-import com.psiw.proj.backend.repository.MovieRepository;
-import com.psiw.proj.backend.repository.RoomRepository;
-import com.psiw.proj.backend.repository.ScreeningRepository;
-import com.psiw.proj.backend.repository.SeatRepository;
+import com.psiw.proj.backend.entity.*;
+import com.psiw.proj.backend.repository.*;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -31,6 +26,8 @@ public class DBInit {
     private final RoomRepository roomRepository;
     private final ScreeningRepository screeningRepository;
     private final MovieRepository movieRepository;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final TicketClerkRepository ticketClerkRepository;
 
     public static final BigDecimal DEFAULT_SEAT_PRICE = new BigDecimal("25.00");
 
@@ -110,6 +107,22 @@ public class DBInit {
         log.info("- {} seats", allSeats.size());
         log.info("- {} movies", movies.size());
         log.info("- {} screenings", screenings.size());
+
+        // 5. Create a default admin user
+        for (int i = 0; i < 5; i++) {
+            String username = "admin" + i;
+            String password = bCryptPasswordEncoder.encode("admin" + i);
+            String fullName = "Admin User " + i;
+
+            TicketClerk ticketClerk = TicketClerk.builder()
+                    .username(username)
+                    .password(password)
+                    .fullName(fullName)
+                    .build();
+
+            ticketClerkRepository.save(ticketClerk);
+            log.info("Admin user created: {}", username);
+        }
     }
 
 }

@@ -14,7 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/psiw/api/v1/repertoire")
+@RequestMapping("/psiw/api/v1/open/repertoire")
 @RequiredArgsConstructor
 public class RepertoireController {
 

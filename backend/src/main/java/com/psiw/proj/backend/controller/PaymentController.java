@@ -15,7 +15,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @RestController
-@RequestMapping("/psiw/api/v1/payment")
+@RequestMapping("/psiw/api/v1/open/payment")
 @Slf4j
 public class PaymentController {
 

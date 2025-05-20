@@ -1,4 +1,4 @@
-package com.psiw.proj.backend.utils;
+package com.psiw.proj.backend.utils.enums;
 
 public enum TicketStatus {
     VALID,     // można wejść
