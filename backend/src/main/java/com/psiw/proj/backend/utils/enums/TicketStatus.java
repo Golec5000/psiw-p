@@ -1,8 +1,18 @@
 package com.psiw.proj.backend.utils.enums;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Status biletu")
 public enum TicketStatus {
-    VALID,     // można wejść
-    USED,      // już skasowany
-    EXPIRED,   // po seansie
-    INVALID    // nie istnieje
+    @Schema(description = "Bilet jest ważny i można wejść")
+    VALID,
+
+    @Schema(description = "Bilet został już użyty")
+    USED,
+
+    @Schema(description = "Bilet stracił ważność – po seansie")
+    EXPIRED,
+
+    @Schema(description = "Nieprawidłowy – nie istnieje w systemie")
+    INVALID
 }

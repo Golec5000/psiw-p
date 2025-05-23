@@ -1,0 +1,481 @@
+openapi: 3.1.0
+info:
+  title: Cinema Service API
+  description: API for cinema service
+  license:
+    name: Apache 2.0
+    url: http://springdoc.org
+  version: "1.0"
+servers:
+  - url: http://localhost:8081
+    description: Generated server url
+paths:
+  /psiw/api/v1/auth/ticket-validation/scan:
+    put:
+      tags:
+        - ticket-validation-controller
+      summary: Skanuje bilet
+      description: "Skanuje bilet podczas wejścia, oznaczając go jako użyty i zwracają\
+        c szczegóły biletu"
+      operationId: scanTicket
+      parameters:
+        - name: ticketId
+          in: query
+          description: ID biletu do zeskanowania
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        "200":
+          description: Bilet zeskanowany pomyślnie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketResponse"
+        "400":
+          description: Nieprawidłowy identyfikator biletu
+  /psiw/api/v1/open/reservations/confirm:
+    post:
+      tags:
+        - reservation-controller
+      summary: Potwierdzenie rezerwacji miejsc
+      description: "Umożliwia użytkownikowi potwierdzenie rezerwacji miejsc na konkretny\
+        \ seans, generując bilet z unikalnym identyfikatorem."
+      operationId: confirmReservation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationRequest"
+        required: true
+      responses:
+        "200":
+          description: Rezerwacja została potwierdzona
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketResponse"
+        "400":
+          description: Nieprawidłowe dane wejściowe
+  /psiw/api/v1/open/payment:
+    post:
+      tags:
+        - payment-controller
+      summary: Przetwarza płatność
+      description: Endpoint do symulacji przetwarzania płatności. Co piąte żądanie
+        kończy się błędem 503 (symulacja awarii).
+      operationId: processPayment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentRequest"
+        required: true
+      responses:
+        "200":
+          description: Płatność przetworzona pomyślnie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+        "503":
+          description: Symulowana awaria przetwarzania płatności
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+  /psiw/api/v1/auth/login:
+    post:
+      tags:
+        - login-controller
+      summary: Logowanie użytkownika
+      description: Umożliwia zalogowanie użytkownika na podstawie danych uwierzytelniających
+        przekazanych przez Spring Security. Zwraca token JWT po poprawnej autoryzacji.
+      operationId: login
+      responses:
+        "200":
+          description: Zalogowano pomyślnie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Nieautoryzowany - błędne dane logowania
+        "404":
+          description: Użytkownik nie znaleziony
+  /psiw/api/v1/open/repertoire/movies:
+    get:
+      tags:
+        - repertoire-controller
+      summary: Pobiera filmy z repertuaru na dany dzień
+      description: Zwraca listę filmów wraz z zaplanowanymi seansami dla konkretnej
+        daty.
+      operationId: getMoviesForSpecificDate
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Lista filmów pobrana pomyślnie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MovieResponse"
+  /psiw/api/v1/open/repertoire/movie-screening:
+    get:
+      tags:
+        - repertoire-controller
+      summary: Pobiera szczegóły konkretnego seansu
+      description: Zwraca szczegółowe informacje na temat seansu na podstawie jego
+        ID.
+      operationId: getScreeningDetails
+      parameters:
+        - name: screeningId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Szczegóły seansu zwrócone pomyślnie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScreeningDetailsResponse"
+  /psiw/api/v1/auth/ticket-validation/check-staus:
+    get:
+      tags:
+        - ticket-validation-controller
+      summary: Sprawdza status biletu
+      description: "Zwraca status biletu (VALID, USED, EXPIRED, INVALID) na podstawie\
+        \ jego ID"
+      operationId: checkStaus
+      parameters:
+        - name: ticketId
+          in: query
+          description: ID biletu do sprawdzenia
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        "200":
+          description: Status biletu
+          content:
+            application/json:
+              schema:
+                type: string
+                description: Status biletu
+                enum:
+                  - VALID
+                  - USED
+                  - EXPIRED
+                  - INVALID
+        "400":
+          description: Nieprawidłowy identyfikator biletu
+components:
+  schemas:
+    TicketResponse:
+      type: object
+      description: Odpowiedź po potwierdzeniu rezerwacji zawierająca dane biletu
+      properties:
+        seatNumbers:
+          type: array
+          description: Numery miejsc
+          example:
+            - 12
+            - 13
+          items:
+            type: integer
+            format: int32
+        movieTitle:
+          type: string
+          description: Tytuł filmu
+          example: Interstellar
+        screeningStartTime:
+          type: string
+          format: date-time
+          description: Data i godzina rozpoczęcia seansu
+          example: 2025-05-24T18:30:00
+        ticketId:
+          type: string
+          format: uuid
+          description: Unikalny identyfikator biletu
+          example: 550e8400-e29b-41d4-a716-446655440000
+        status:
+          type: string
+          description: Status biletu
+          enum:
+            - VALID
+            - USED
+            - EXPIRED
+            - INVALID
+          example: CONFIRMED
+        email:
+          type: string
+          description: Email osoby rezerwującej
+          example: john.doe@example.com
+        ticket_owner:
+          type: string
+          description: Imię i nazwisko właściciela biletu
+          example: John Doe
+        price:
+          type: number
+          description: Łączna cena biletu
+          example: 59.99
+    ReservationRequest:
+      type: object
+      description: Dane wymagane do rezerwacji miejsc na seansie
+      properties:
+        screeningId:
+          type: integer
+          format: int64
+          description: "ID seansu, na który ma zostać dokonana rezerwacja"
+          example: 123
+        seatIds:
+          type: array
+          description: Lista identyfikatorów miejsc do rezerwacji
+          example:
+            - 1
+            - 2
+            - 3
+          items:
+            type: integer
+            format: int64
+        email:
+          type: string
+          description: Adres email osoby rezerwującej
+          example: john.doe@example.com
+        name:
+          type: string
+          description: Imię osoby rezerwującej
+          example: John
+        surname:
+          type: string
+          description: Nazwisko osoby rezerwującej
+          example: Doe
+      required:
+        - email
+        - name
+        - screeningId
+        - seatIds
+        - surname
+    PaymentRequest:
+      type: object
+      description: Dane wymagane do przetworzenia płatności
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: Identyfikator użytkownika
+          example: 12345
+        amount:
+          type: number
+          format: double
+          description: Kwota płatności
+          example: 150.75
+        method:
+          type: string
+          description: Metoda płatności
+          example: CARD
+    PaymentResponse:
+      type: object
+      description: Odpowiedź po przetworzeniu płatności
+      properties:
+        success:
+          type: boolean
+          description: Czy płatność się powiodła
+          example: true
+        message:
+          type: string
+          description: Komunikat informacyjny
+          example: Payment succeeded.
+    LoginResponse:
+      type: object
+      description: Odpowiedź zwracana po poprawnym logowaniu zawierająca token JWT
+        i typ tokenu
+      properties:
+        accessToken:
+          type: string
+          description: Token JWT autoryzujący użytkownika
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        tokenType:
+          type: string
+          description: Typ tokenu
+          enum:
+            - Bearer
+          example: Bearer
+    MovieResponse:
+      type: object
+      description: Film dostępny w repertuarze z listą seansów
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID filmu
+          example: 101
+        title:
+          type: string
+          description: Tytuł filmu
+          example: Incepcja
+        description:
+          type: string
+          description: Opis filmu
+          example: Film science-fiction w reżyserii Christophera Nolana
+        image:
+          type: string
+          description: URL do plakatu
+          example: https://example.com/poster.jpg
+        screenings:
+          type: array
+          description: Lista seansów dla filmu
+          items:
+            $ref: "#/components/schemas/ScreeningSummaryDto"
+    ScreeningSummaryDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        startTime:
+          type: string
+          format: date-time
+        duration:
+          type: object
+          properties:
+            seconds:
+              type: integer
+              format: int64
+            zero:
+              type: boolean
+            nano:
+              type: integer
+              format: int32
+            negative:
+              type: boolean
+            positive:
+              type: boolean
+            units:
+              type: array
+              items:
+                type: object
+                properties:
+                  durationEstimated:
+                    type: boolean
+                  timeBased:
+                    type: boolean
+                  dateBased:
+                    type: boolean
+    MovieSimpleDto:
+      type: object
+      description: Podstawowe informacje o filmie
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID filmu
+          example: 101
+        title:
+          type: string
+          description: Tytuł filmu
+          example: Matrix
+    RoomDto:
+      type: object
+      properties:
+        roomNumber:
+          type: integer
+          format: int64
+        rowCount:
+          type: integer
+          format: int32
+        columnCount:
+          type: integer
+          format: int32
+    ScreeningDetailsResponse:
+      type: object
+      description: Szczegółowe informacje o seansie filmowym
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID seansu
+          example: 201
+        movie:
+          $ref: "#/components/schemas/MovieSimpleDto"
+          description: Informacje o filmie
+        room:
+          $ref: "#/components/schemas/RoomDto"
+          description: Informacje o sali
+        startTime:
+          type: string
+          format: date-time
+          description: Czas rozpoczęcia
+          example: 2025-05-23T20:00:00
+        duration:
+          type: object
+          description: Czas trwania
+          properties:
+            seconds:
+              type: integer
+              format: int64
+            zero:
+              type: boolean
+            nano:
+              type: integer
+              format: int32
+            negative:
+              type: boolean
+            positive:
+              type: boolean
+            units:
+              type: array
+              items:
+                type: object
+                properties:
+                  durationEstimated:
+                    type: boolean
+                  timeBased:
+                    type: boolean
+                  dateBased:
+                    type: boolean
+        seats:
+          type: array
+          description: Lista dostępnych miejsc
+          items:
+            $ref: "#/components/schemas/SeatDto"
+    SeatDto:
+      type: object
+      description: Informacje o miejscu w sali kinowej
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID miejsca
+          example: 501
+        rowNumber:
+          type: integer
+          format: int32
+          description: Numer rzędu
+          example: 5
+        columnNumber:
+          type: integer
+          format: int32
+          description: Numer kolumny
+          example: 8
+        seatNumber:
+          type: integer
+          format: int32
+          description: Numer miejsca
+          example: 12
+        available:
+          type: boolean
+          description: Czy miejsce jest dostępne
+          example: true

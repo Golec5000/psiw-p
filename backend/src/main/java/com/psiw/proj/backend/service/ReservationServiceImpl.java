@@ -63,16 +63,16 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     private TicketResponse createTicketResponse(List<Seat> seats, Screening screening, Ticket ticket) {
-        return new TicketResponse(
-                getSeatNumbers(seats),
-                screening.getMovie().getTitle(),
-                screening.getStartTime(),
-                ticket.getTicketNumber(),
-                ticket.getStatus(),
-                ticket.getOwnerEmail(),
-                ticket.getOwnerName() + " " + ticket.getOwnerSurname(),
-                ticket.getTicketPrice()
-        );
+        return TicketResponse.builder()
+                .seatNumbers(getSeatNumbers(seats))
+                .movieTitle(screening.getMovie().getTitle())
+                .screeningStartTime(screening.getStartTime())
+                .ticketId(ticket.getTicketNumber())
+                .status(ticket.getStatus())
+                .email(ticket.getOwnerEmail())
+                .ticket_owner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
+                .price(ticket.getTicketPrice())
+                .build();
     }
 
     private Set<Long> extractTakenSeats(ReservationRequest reservationRequest) {

@@ -153,16 +153,16 @@ class TicketValidationServiceImplTest {
                 .screening(screening)
                 .build();
 
-        TicketResponse ticketResponse = new TicketResponse(
-                List.of(1),
-                "Expected Movie Title",
-                screening.getStartTime(),
-                ticketId,
-                TicketStatus.USED,
-                "example@gmail.com",
-                "John Doe",
-                DEFAULT_SEAT_PRICE
-        );
+        TicketResponse ticketResponse = TicketResponse.builder()
+                .seatNumbers(List.of(1))
+                .movieTitle("Expected Movie Title")
+                .screeningStartTime(screening.getStartTime())
+                .ticketId(ticketId)
+                .status(TicketStatus.USED)
+                .email("example@gmail.com")
+                .ticket_owner("John Doe")
+                .price(DEFAULT_SEAT_PRICE)
+                .build();
 
         when(clock.instant()).thenReturn(fixedClock.instant());
         when(clock.getZone()).thenReturn(fixedClock.getZone());

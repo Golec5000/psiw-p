@@ -61,16 +61,16 @@ public class TicketValidationServiceImpl implements TicketValidationService {
         LocalDateTime screeningStartTime = ticket.getScreening().getStartTime();
         UUID ticketId = ticket.getTicketNumber();
 
-        return new TicketResponse(
-                seatNumbers,
-                movieTitle,
-                screeningStartTime,
-                ticketId,
-                ticket.getStatus(),
-                ticket.getOwnerEmail(),
-                ticket.getOwnerName() + " " + ticket.getOwnerSurname(),
-                ticket.getTicketPrice()
-        );
+        return TicketResponse.builder()
+                .seatNumbers(seatNumbers)
+                .movieTitle(movieTitle)
+                .screeningStartTime(screeningStartTime)
+                .ticketId(ticketId)
+                .status(ticket.getStatus())
+                .email(ticket.getOwnerEmail())
+                .ticket_owner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
+                .price(ticket.getTicketPrice())
+                .build();
     }
 
     private Ticket findExistingTicket(UUID ticketNumber) {
