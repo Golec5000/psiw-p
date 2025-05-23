@@ -14,7 +14,6 @@ import com.psiw.proj.backend.utils.enums.TicketStatus;
 import com.psiw.proj.backend.utils.requestDto.ReservationRequest;
 import com.psiw.proj.backend.utils.responseDto.TicketResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
 import static com.psiw.proj.backend.utils.DBInit.DEFAULT_SEAT_PRICE;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
 
@@ -39,74 +37,34 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public TicketResponse reserveSeats(ReservationRequest reservationRequest) {
-        log.info("Reserving seats {} for screeningId {}", reservationRequest.seatIds(), reservationRequest.screeningId());
-
         Screening screening = screeningRepository.findById(reservationRequest.screeningId())
-                .orElseThrow(() -> {
-                    log.error("Screening not found: {}", reservationRequest.screeningId());
-                    return new ScreeningNotFoundException("Screening not found: " + reservationRequest.screeningId());
-                });
+                .orElseThrow(() -> new ScreeningNotFoundException("Screening not found: " + reservationRequest.screeningId()));
 
         Long roomNo = screening.getRoom().getRoomNumber();
-        log.info("Screening {} is in room {}", reservationRequest.screeningId(), roomNo);
-
         long matching = seatRepository.countByIdInAndRoomRoomNumber(reservationRequest.seatIds(), roomNo);
-        if (matching != reservationRequest.seatIds().size()) {
-            log.warn("Seat validation failed for seats {} in room {}", reservationRequest.seatIds(), roomNo);
+        if (matching != reservationRequest.seatIds().size())
             throw new IllegalArgumentException("One or more seats not found or not in the same room");
-        }
 
-        Set<Long> taken = ticketRepository.findAllByScreeningId(reservationRequest.screeningId()).stream()
-                .flatMap(ticket -> ticket.getTicketSeats().stream())
-                .map(ts -> ts.getSeat().getId())
-                .collect(Collectors.toSet());
-        log.info("Currently taken seats for screening {}: {}", reservationRequest.screeningId(), taken);
-
+        Set<Long> taken = extractTakenSeats(reservationRequest);
         List<Long> conflict = reservationRequest.seatIds().stream()
                 .filter(taken::contains)
                 .toList();
-        if (!conflict.isEmpty()) {
-            log.warn("Attempt to reserve already taken seats: {}", conflict);
-            throw new IllegalStateException("Seats already taken: " + conflict);
-        }
 
-        Ticket ticket = ticketRepository.save(
-                Ticket.builder()
-                        .screening(screening)
-                        .ticketPrice(
-                                DEFAULT_SEAT_PRICE
-                                        .multiply(new BigDecimal(reservationRequest.seatIds().size()))
-                                        .setScale(2, RoundingMode.HALF_UP)
-                        )
-                        .ownerName(reservationRequest.name())
-                        .ownerSurname(reservationRequest.surname())
-                        .ownerEmail(reservationRequest.email())
-                        .status(TicketStatus.VALID)
-                        .build()
-        );
-        log.info("Created ticket {} for screening {}", ticket.getTicketNumber(), reservationRequest.screeningId());
+        if (!conflict.isEmpty()) throw new IllegalStateException("Seats already taken: " + conflict);
 
+        Ticket ticket = ticketRepository.save(createTicket(reservationRequest, screening));
         List<Seat> seats = seatRepository.findAllById(reservationRequest.seatIds());
+        List<TicketSeat> links = getTicketSeats(seats, ticket, screening);
 
-        List<TicketSeat> links = seats.stream()
-                .map(seat -> TicketSeat.builder()
-                        .ticket(ticket)
-                        .seat(seat)
-                        .screening(screening)
-                        .build()
-                )
-                .toList();
         ticketSeatRepository.saveAll(links);
         ticket.setTicketSeats(links);
-        log.info("Linked ticket {} with seats {}", ticket.getTicketNumber(), reservationRequest.seatIds());
 
-        List<Integer> seatNumbers = seats.stream()
-                .map(Seat::getSeatNumber)
-                .toList();
+        return createTicketResponse(seats, screening, ticket);
+    }
 
-        log.info("Reservation successful for ticket {}: seats {}", ticket.getTicketNumber(), seatNumbers);
+    private TicketResponse createTicketResponse(List<Seat> seats, Screening screening, Ticket ticket) {
         return new TicketResponse(
-                seatNumbers,
+                getSeatNumbers(seats),
                 screening.getMovie().getTitle(),
                 screening.getStartTime(),
                 ticket.getTicketNumber(),
@@ -115,5 +73,44 @@ public class ReservationServiceImpl implements ReservationService {
                 ticket.getOwnerName() + " " + ticket.getOwnerSurname(),
                 ticket.getTicketPrice()
         );
+    }
+
+    private Set<Long> extractTakenSeats(ReservationRequest reservationRequest) {
+        return ticketRepository.findAllByScreeningId(reservationRequest.screeningId()).stream()
+                .flatMap(ticket -> ticket.getTicketSeats().stream())
+                .map(ts -> ts.getSeat().getId())
+                .collect(Collectors.toSet());
+    }
+
+    private List<Integer> getSeatNumbers(List<Seat> seats) {
+        return seats.stream()
+                .map(Seat::getSeatNumber)
+                .toList();
+    }
+
+    private List<TicketSeat> getTicketSeats(List<Seat> seats, Ticket ticket, Screening screening) {
+        return seats.stream()
+                .map(seat -> TicketSeat.builder()
+                        .ticket(ticket)
+                        .seat(seat)
+                        .screening(screening)
+                        .build()
+                )
+                .toList();
+    }
+
+    private Ticket createTicket(ReservationRequest reservationRequest, Screening screening) {
+        return Ticket.builder()
+                .screening(screening)
+                .ticketPrice(
+                        DEFAULT_SEAT_PRICE
+                                .multiply(new BigDecimal(reservationRequest.seatIds().size()))
+                                .setScale(2, RoundingMode.HALF_UP)
+                )
+                .ownerName(reservationRequest.name())
+                .ownerSurname(reservationRequest.surname())
+                .ownerEmail(reservationRequest.email())
+                .status(TicketStatus.VALID)
+                .build();
     }
 }

@@ -16,7 +16,6 @@ import com.psiw.proj.backend.utils.responseDto.helpers.RoomDto;
 import com.psiw.proj.backend.utils.responseDto.helpers.ScreeningSummaryDto;
 import com.psiw.proj.backend.utils.responseDto.helpers.SeatDto;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,7 +25,6 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class RepertoireServiceImpl implements RepertoireService {
 
@@ -36,14 +34,39 @@ public class RepertoireServiceImpl implements RepertoireService {
 
     @Override
     public List<MovieResponse> getMoviesWithScreeningsForDate(LocalDate date) {
-        log.info("Fetching movies with screenings for date: {}", date);
         LocalDateTime from = date.atStartOfDay();
         LocalDateTime to = date.plusDays(1).atStartOfDay();
 
         List<Movie> movies = movieRepository.findDistinctByScreeningsStartTimeBetween(from, to);
-        log.info("Found {} movies with screenings between {} and {}", movies.size(), from, to);
 
-        List<MovieResponse> responses = movies.stream()
+        return createMovieResponse(movies);
+    }
+
+    @Override
+    public ScreeningDetailsResponse getScreeningDetails(Long screeningId) {
+        Screening s = screeningRepository.findByIdWithRoomAndMovie(screeningId)
+                .orElseThrow(() -> new ScreeningNotFoundException("Screening not found"));
+
+        Set<Long> taken = ticketSeatRepository.findTakenSeatIds(screeningId);
+        List<Seat> seatList = Optional.ofNullable(s.getRoom().getSeats())
+                .orElseThrow(() -> new RoomHasNoSeatsException("Room has no seats defined"));
+
+        return createScreeningResponse(s, seatList, taken);
+    }
+
+    private ScreeningDetailsResponse createScreeningResponse(Screening s, List<Seat> seatList, Set<Long> taken) {
+        return new ScreeningDetailsResponse(
+                s.getId(),
+                new MovieSimpleDto(s.getMovie().getId(), s.getMovie().getTitle()),
+                new RoomDto(s.getRoom().getRoomNumber(), s.getRoom().getRowCount(), s.getRoom().getColumnCount()),
+                s.getStartTime(),
+                s.getDuration(),
+                getSeatDtos(seatList, taken)
+        );
+    }
+
+    private List<MovieResponse> createMovieResponse(List<Movie> movies) {
+        return movies.stream()
                 .map(m -> new MovieResponse(
                         m.getId(),
                         m.getTitle(),
@@ -58,30 +81,10 @@ public class RepertoireServiceImpl implements RepertoireService {
                                 .toList()
                 ))
                 .toList();
-
-        log.info("Returning {} movie responses", responses.size());
-        return responses;
     }
 
-    @Override
-    public ScreeningDetailsResponse getScreeningDetails(Long screeningId) {
-        log.info("Fetching screening details for screeningId: {}", screeningId);
-        Screening s = screeningRepository.findByIdWithRoomAndMovie(screeningId)
-                .orElseThrow(() -> {
-                    log.error("Screening not found for id: {}", screeningId);
-                    return new ScreeningNotFoundException("Screening not found");
-                });
-
-        Set<Long> taken = ticketSeatRepository.findTakenSeatIds(screeningId);
-        log.info("Taken seat ids for screening {}: {}", screeningId, taken);
-
-        List<Seat> seatList = Optional.ofNullable(s.getRoom().getSeats())
-                .orElseThrow(() -> {
-                    log.error("Room has no seats defined for screeningId: {}", screeningId);
-                    return new RoomHasNoSeatsException("Room has no seats defined");
-                });
-
-        List<SeatDto> seats = seatList.stream()
+    private List<SeatDto> getSeatDtos(List<Seat> seatList, Set<Long> taken) {
+        return seatList.stream()
                 .map(seat -> new SeatDto(
                         seat.getId(),
                         seat.getRowNumber(),
@@ -90,15 +93,5 @@ public class RepertoireServiceImpl implements RepertoireService {
                         !taken.contains(seat.getId())
                 ))
                 .toList();
-
-        log.info("Returning screening details for screeningId: {}", screeningId);
-        return new ScreeningDetailsResponse(
-                s.getId(),
-                new MovieSimpleDto(s.getMovie().getId(), s.getMovie().getTitle()),
-                new RoomDto(s.getRoom().getRoomNumber(), s.getRoom().getRowCount(), s.getRoom().getColumnCount()),
-                s.getStartTime(),
-                s.getDuration(),
-                seats
-        );
     }
 }

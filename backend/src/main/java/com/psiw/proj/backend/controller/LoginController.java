@@ -1,6 +1,7 @@
 package com.psiw.proj.backend.controller;
 
 import com.psiw.proj.backend.service.interfaces.AuthService;
+import com.psiw.proj.backend.utils.aspects.LogExecution;
 import com.psiw.proj.backend.utils.responseDto.LoginResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@LogExecution
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/psiw/api/v1/auth")

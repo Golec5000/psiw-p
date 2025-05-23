@@ -8,7 +8,6 @@ import com.psiw.proj.backend.utils.enums.TicketStatus;
 import com.psiw.proj.backend.utils.responseDto.TicketResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class TicketValidationServiceImpl implements TicketValidationService {
 
@@ -27,41 +25,31 @@ public class TicketValidationServiceImpl implements TicketValidationService {
     @Override
     @Transactional
     public TicketStatus checkTicket(UUID ticketNumber) {
-        log.info("Checking ticket with number: {}", ticketNumber);
         Ticket ticket = findExistingTicket(ticketNumber);
 
-        if (!isValid(ticket)) {
-            log.warn("Ticket {} is not valid. Current status: {}", ticketNumber, ticket.getStatus());
-            return ticket.getStatus();
-        }
+        if (!isValid(ticket)) return ticket.getStatus();
 
         if (isExpired(ticket)) {
-            log.info("Ticket {} has expired. Marking as EXPIRED.", ticketNumber);
             ticket.setStatus(TicketStatus.EXPIRED);
             ticketRepository.save(ticket);
             return TicketStatus.EXPIRED;
         }
 
-        log.info("Ticket {} is valid.", ticketNumber);
         return TicketStatus.VALID;
     }
 
     @Override
     @Transactional
     public TicketResponse scanTicket(UUID ticketNumber) {
-        log.info("Scanning ticket with number: {}", ticketNumber);
         TicketStatus status = checkTicket(ticketNumber);
-        if (status != TicketStatus.VALID) {
-            log.error("Cannot scan ticket {}. Status: {}", ticketNumber, status);
+
+        if (status != TicketStatus.VALID)
             throw new IllegalStateException("Cannot scan ticket in status: " + status);
-        }
 
         Ticket ticket = ticketRepository.getReferenceById(ticketNumber);
         ticket.setStatus(TicketStatus.USED);
         Ticket updatedTicket = ticketRepository.save(ticket);
-        log.info("Ticket {} scanned successfully. Status set to USED.", ticketNumber);
 
-        // Map Ticket to TicketResponse
         return mapToTicketResponse(updatedTicket);
     }
 
@@ -86,26 +74,18 @@ public class TicketValidationServiceImpl implements TicketValidationService {
     }
 
     private Ticket findExistingTicket(UUID ticketNumber) {
-        log.info("Finding ticket with number: {}", ticketNumber);
         return ticketRepository.findById(ticketNumber)
-                .orElseThrow(() -> {
-                    log.error("Ticket not found: {}", ticketNumber);
-                    return new TicketNotFoundException("Ticket not found: " + ticketNumber);
-                });
+                .orElseThrow(() -> new TicketNotFoundException("Ticket not found: " + ticketNumber));
     }
 
     private boolean isValid(Ticket ticket) {
-        boolean valid = ticket.getStatus() == TicketStatus.VALID;
-        log.info("Ticket {} valid status: {}", ticket.getTicketNumber(), valid);
-        return valid;
+        return ticket.getStatus() == TicketStatus.VALID;
     }
 
     private boolean isExpired(Ticket ticket) {
         LocalDateTime now = LocalDateTime.now(clock);
         LocalDateTime start = ticket.getScreening().getStartTime();
         LocalDateTime end = start.plus(ticket.getScreening().getDuration());
-        boolean expired = now.isAfter(end);
-        log.info("Ticket {} expired check: now={}, end={}, expired={}", ticket.getTicketNumber(), now, end, expired);
-        return expired;
+        return now.isAfter(end);
     }
 }
