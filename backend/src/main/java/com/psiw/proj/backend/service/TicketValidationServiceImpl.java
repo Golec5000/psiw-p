@@ -100,8 +100,7 @@ public class TicketValidationServiceImpl implements TicketValidationService {
                 .toList();
 
         // 4) wygasa bilety tylko dla tych seansów
-        return expiredIds.isEmpty() ?
-                0 : ticketRepository.expirePastTicketsByScreening(expiredIds);
+        return toValid + ticketRepository.expirePastTicketsByScreening(expiredIds);
 
     }
 

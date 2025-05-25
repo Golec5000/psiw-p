@@ -208,14 +208,14 @@ class TicketValidationServiceImplTest {
     }
 
     @Test
-    void shouldReturnZeroWhenNoExpiredScreenings() {
+    void shouldReturnSumWhenNoExpiredScreenings() {
         // given
         LocalDateTime now = LocalDateTime.of(2025, 5, 25, 14, 0);
         Clock fixedClock = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
         when(clock.instant()).thenReturn(fixedClock.instant());
         when(clock.getZone()).thenReturn(fixedClock.getZone());
 
-        // 1) stub updateStatusToValid
+        // 1) stub updateStatusToValid → np. 7
         when(ticketRepository.updateStatusToValid(
                 eq(TicketStatus.VALID),
                 eq(TicketStatus.TO_BE_CALCULATED),
@@ -223,7 +223,7 @@ class TicketValidationServiceImplTest {
                 eq(now.plusMinutes(15))
         )).thenReturn(7);
 
-        // 2) screening started but not yet finished
+        // 2) screening wystartowany, ale jeszcze nie wygasł
         Screening s = Screening.builder()
                 .id(42L)
                 .startTime(now.minusMinutes(10))
@@ -232,36 +232,39 @@ class TicketValidationServiceImplTest {
         when(screeningRepository.findStartedScreenings(now))
                 .thenReturn(List.of(s));
 
+        // 3) stub expirePastTicketsByScreening dla pustej listy → 0
+        when(ticketRepository.expirePastTicketsByScreening(List.of()))
+                .thenReturn(0);
+
         // when
         int result = ticketValidationService.updateTicketStatus();
 
         // then
-        assertThat(result).isZero();
-        // powinno wykonać updateStatusToValid
+        assertThat(result).isEqualTo(7); // 7 + 0
         verify(ticketRepository).updateStatusToValid(
                 TicketStatus.VALID,
                 TicketStatus.TO_BE_CALCULATED,
                 now,
                 now.plusMinutes(15)
         );
-        // ale nie powinno wygaszać żadnych biletów
-        verify(ticketRepository, never()).expirePastTicketsByScreening(any());
+        // teraz zawsze wywołujemy expirePastTicketsByScreening nawet dla pustej listy
+        verify(ticketRepository).expirePastTicketsByScreening(List.of());
     }
 
     @Test
-    void shouldExpirePastTicketsWhenThereAreExpiredScreenings() {
+    void shouldReturnSumWhenThereAreExpiredScreenings() {
         // given
         LocalDateTime now = LocalDateTime.of(2025, 5, 25, 16, 0);
         Clock fixedClock = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
         when(clock.instant()).thenReturn(fixedClock.instant());
         when(clock.getZone()).thenReturn(fixedClock.getZone());
 
-        // 1) stub updateStatusToValid
+        // 1) stub updateStatusToValid → np. 2
         when(ticketRepository.updateStatusToValid(
                 any(), any(), any(), any()
         )).thenReturn(2);
 
-        // 2) screening już zakończony
+        // 2) jeden seans już zakończony
         Screening expired = Screening.builder()
                 .id(99L)
                 .startTime(now.minusHours(2))
@@ -270,7 +273,7 @@ class TicketValidationServiceImplTest {
         when(screeningRepository.findStartedScreenings(now))
                 .thenReturn(List.of(expired));
 
-        // 3) stub expirePastTicketsByScreening
+        // 3) stub expirePastTicketsByScreening dla [99] → 5
         when(ticketRepository.expirePastTicketsByScreening(List.of(99L)))
                 .thenReturn(5);
 
@@ -278,15 +281,14 @@ class TicketValidationServiceImplTest {
         int result = ticketValidationService.updateTicketStatus();
 
         // then
-        assertThat(result).isEqualTo(5);
-        // powinno wykonać updateStatusToValid
+        assertThat(result).isEqualTo(7); // 2 + 5
         verify(ticketRepository).updateStatusToValid(
                 TicketStatus.VALID,
                 TicketStatus.TO_BE_CALCULATED,
                 now,
                 now.plusMinutes(15)
         );
-        // i wygasić bilety
         verify(ticketRepository).expirePastTicketsByScreening(List.of(99L));
     }
+
 }
