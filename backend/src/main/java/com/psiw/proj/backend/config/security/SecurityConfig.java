@@ -72,6 +72,18 @@ public class SecurityConfig {
 
     @Order(3)
     @Bean
+    public SecurityFilterChain refreshSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher(new AntPathRequestMatcher("/psiw/api/v1/auth/refresh"))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(withDefaults());
+        return http.build();
+    }
+
+    @Order(4)
+    @Bean
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher(new AntPathRequestMatcher("/psiw/api/v1/auth/**"))

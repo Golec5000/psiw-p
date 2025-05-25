@@ -34,7 +34,10 @@ public class DefaultExceptionHandler {
         return createResponseEntity(e, request, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler({AuthenticationException.class, JwtValidationException.class})
+    @ExceptionHandler({
+            AuthenticationException.class, JwtValidationException.class,
+            RefreshTokenExpiredException.class
+    })
     public ResponseEntity<ApiError> handleAuthenticationException(AuthenticationException e, HttpServletRequest request) {
         return createResponseEntity(e, request, HttpStatus.UNAUTHORIZED);
     }

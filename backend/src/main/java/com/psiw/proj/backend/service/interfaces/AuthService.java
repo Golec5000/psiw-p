@@ -6,4 +6,6 @@ import org.springframework.security.core.Authentication;
 
 public interface AuthService {
     LoginResponse login(Authentication authentication) throws TicketClerkNotFoundException;
+
+    LoginResponse refresh(String refreshToken);
 }

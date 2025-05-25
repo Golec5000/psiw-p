@@ -5,14 +5,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
 @Builder
-@Schema(description = "Odpowiedź zwracana po poprawnym logowaniu zawierająca token JWT i typ tokenu")
+@Schema(description = "Odpowiedź po logowaniu: access i refresh tokeny")
 public record LoginResponse(
 
-        @Schema(description = "Token JWT autoryzujący użytkownika", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+        @Schema(description = "JWT dostępowy", example = "eyJhbGciOiJIUzI1NiI...")
         String accessToken,
 
-        @Schema(description = "Typ tokenu", example = "Bearer")
-        TokenType tokenType
+        @Schema(description = "Refresh token", example = "eyJhbGciOiJIUzI1NiI...")
+        String refreshToken,
 
+        @Schema(description = "Typ tokenu dostępowego", example = "Bearer")
+        TokenType tokenType
 ) {
 }
