@@ -9,6 +9,7 @@ import com.psiw.proj.backend.exceptions.custom.ScreeningNotFoundException;
 import com.psiw.proj.backend.repository.MovieRepository;
 import com.psiw.proj.backend.repository.ScreeningRepository;
 import com.psiw.proj.backend.repository.TicketSeatRepository;
+import com.psiw.proj.backend.service.implementation.RepertoireServiceImpl;
 import com.psiw.proj.backend.utils.responseDto.MovieResponse;
 import com.psiw.proj.backend.utils.responseDto.ScreeningDetailsResponse;
 import com.psiw.proj.backend.utils.responseDto.helpers.SeatDto;

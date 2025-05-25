@@ -21,7 +21,7 @@ public record MovieResponse(
         @Schema(description = "URL do plakatu", example = "https://example.com/poster.jpg")
         String image,
 
-        @Schema(description = "Lista seansów dla filmu") List<ScreeningSummaryDto>
-        screenings
+        @Schema(description = "Lista seansów dla filmu")
+        List<ScreeningSummaryDto> screenings
 ) {
 }

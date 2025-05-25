@@ -1,4 +1,4 @@
-package com.psiw.proj.backend.service;
+package com.psiw.proj.backend.service.implementation;
 
 import com.psiw.proj.backend.entity.Screening;
 import com.psiw.proj.backend.entity.Ticket;
@@ -28,52 +28,23 @@ public class TicketValidationServiceImpl implements TicketValidationService {
     @Override
     @Transactional
     public TicketStatus checkTicket(UUID ticketNumber) {
-        Ticket ticket = findExistingTicket(ticketNumber);
-
-        if (!isValid(ticket)) return ticket.getStatus();
-
-        if (isExpired(ticket)) {
-            ticket.setStatus(TicketStatus.EXPIRED);
-            ticketRepository.save(ticket);
-            return TicketStatus.EXPIRED;
-        }
-
-        return TicketStatus.VALID;
+        return findExistingTicket(ticketNumber).getStatus();
     }
 
     @Override
     @Transactional
     public TicketResponse scanTicket(UUID ticketNumber) {
-        TicketStatus status = checkTicket(ticketNumber);
+        Ticket ticket = findExistingTicket(ticketNumber);
 
-        if (status != TicketStatus.VALID)
+        TicketStatus status = evaluateStatus(ticket);
+        if (status != TicketStatus.VALID) {
             throw new IllegalStateException("Cannot scan ticket in status: " + status);
+        }
 
-        Ticket ticket = ticketRepository.getReferenceById(ticketNumber);
         ticket.setStatus(TicketStatus.USED);
-        Ticket updatedTicket = ticketRepository.save(ticket);
+        Ticket updated = ticketRepository.save(ticket);
 
-        return mapToTicketResponse(updatedTicket);
-    }
-
-    TicketResponse mapToTicketResponse(Ticket ticket) {
-        List<Integer> seatNumbers = ticket.getTicketSeats().stream()
-                .map(screening -> screening.getSeat().getSeatNumber())
-                .toList();
-        String movieTitle = ticket.getScreening().getMovie().getTitle();
-        LocalDateTime screeningStartTime = ticket.getScreening().getStartTime();
-        UUID ticketId = ticket.getTicketNumber();
-
-        return TicketResponse.builder()
-                .seatNumbers(seatNumbers)
-                .movieTitle(movieTitle)
-                .screeningStartTime(screeningStartTime)
-                .ticketId(ticketId)
-                .status(ticket.getStatus())
-                .email(ticket.getOwnerEmail())
-                .ticketOwner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
-                .price(ticket.getTicketPrice())
-                .build();
+        return mapToTicketResponse(updated);
     }
 
     @Override
@@ -99,9 +70,7 @@ public class TicketValidationServiceImpl implements TicketValidationService {
                 .map(Screening::getId)
                 .toList();
 
-        // 4) wygasa bilety tylko dla tych seansów
         return toValid + ticketRepository.expirePastTicketsByScreening(expiredIds);
-
     }
 
     private Ticket findExistingTicket(UUID ticketNumber) {
@@ -118,5 +87,32 @@ public class TicketValidationServiceImpl implements TicketValidationService {
         LocalDateTime start = ticket.getScreening().getStartTime();
         LocalDateTime end = start.plus(ticket.getScreening().getDuration());
         return now.isAfter(end);
+    }
+
+    private TicketStatus evaluateStatus(Ticket ticket) {
+        if (ticket.getStatus() != TicketStatus.VALID) {
+            return ticket.getStatus();
+        }
+        return isExpired(ticket) ? TicketStatus.EXPIRED : TicketStatus.VALID;
+    }
+
+    TicketResponse mapToTicketResponse(Ticket ticket) {
+        List<Integer> seatNumbers = ticket.getTicketSeats().stream()
+                .map(screening -> screening.getSeat().getSeatNumber())
+                .toList();
+        String movieTitle = ticket.getScreening().getMovie().getTitle();
+        LocalDateTime screeningStartTime = ticket.getScreening().getStartTime();
+        UUID ticketId = ticket.getTicketNumber();
+
+        return TicketResponse.builder()
+                .seatNumbers(seatNumbers)
+                .movieTitle(movieTitle)
+                .screeningStartTime(screeningStartTime)
+                .ticketId(ticketId)
+                .status(ticket.getStatus())
+                .email(ticket.getOwnerEmail())
+                .ticketOwner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
+                .price(ticket.getTicketPrice())
+                .build();
     }
 }

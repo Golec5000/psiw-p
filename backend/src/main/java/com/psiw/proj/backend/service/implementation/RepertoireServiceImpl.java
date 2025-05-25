@@ -1,4 +1,4 @@
-package com.psiw.proj.backend.service;
+package com.psiw.proj.backend.service.implementation;
 
 import com.psiw.proj.backend.entity.Movie;
 import com.psiw.proj.backend.entity.Screening;

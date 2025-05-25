@@ -1,8 +1,6 @@
 package com.psiw.proj.backend.exceptions.handler;
 
-import com.psiw.proj.backend.exceptions.custom.RoomHasNoSeatsException;
-import com.psiw.proj.backend.exceptions.custom.ScreeningNotFoundException;
-import com.psiw.proj.backend.exceptions.custom.TicketNotFoundException;
+import com.psiw.proj.backend.exceptions.custom.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -22,7 +20,8 @@ public class DefaultExceptionHandler {
             NullPointerException.class, IllegalStateException.class,
             IndexOutOfBoundsException.class, UnsupportedOperationException.class,
             TicketNotFoundException.class, ScreeningNotFoundException.class,
-            RoomHasNoSeatsException.class
+            RoomHasNoSeatsException.class, MovieNotFoundException.class,
+            MovieImageNotFoundException.class
     })
     public ResponseEntity<ApiError> handleNotFoundExceptions(Exception e, HttpServletRequest request) {
         return createResponseEntity(e, request, HttpStatus.NOT_FOUND);

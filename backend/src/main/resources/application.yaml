@@ -37,3 +37,6 @@ spring:
     pattern:
       console: "%d{yyyy-MM-dd HH:mm:ss} - [%thread] %-5level %logger{36} - %msg%n"
       file: "%d{yyyy-MM-dd HH:mm:ss} - [%thread] %-5level %logger{36} - %msg%n"
+movie:
+  images:
+    location: classpath:/static/images/
