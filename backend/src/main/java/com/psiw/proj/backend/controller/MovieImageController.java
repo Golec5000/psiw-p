@@ -2,6 +2,10 @@ package com.psiw.proj.backend.controller;
 
 import com.psiw.proj.backend.service.interfaces.MovieImageService;
 import com.psiw.proj.backend.utils.aspects.LogExecution;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -26,8 +30,25 @@ public class MovieImageController {
 
     private final MovieImageService imageService;
 
+    @Operation(
+            summary = "Pobierz obraz filmu",
+            description = "Zwraca surowe bajty obrazu powiązanego z podanym ID filmu. " +
+                    "Typ zawartości odpowiedzi jest określany dynamicznie (np. image/jpeg, image/png)."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Obraz został pomyślnie pobrany"),
+            @ApiResponse(responseCode = "404", description = "Film lub jego obraz nie został znaleziony"),
+            @ApiResponse(responseCode = "500", description = "Wewnętrzny błąd serwera podczas odczytu obrazu")
+    })
     @GetMapping("/{id}/image")
-    public ResponseEntity<ByteArrayResource> getMovieImage(@PathVariable("id") Long movieId) throws IOException {
+    public ResponseEntity<ByteArrayResource> getMovieImage(
+            @Parameter(
+                    description = "Unikalny identyfikator filmu",
+                    example = "42",
+                    required = true
+            )
+            @PathVariable("id") Long movieId
+    ) throws IOException {
         Resource img = imageService.loadImageResource(movieId);
 
         // Odczyt bajtów
@@ -35,9 +56,7 @@ public class MovieImageController {
         ByteArrayResource resource = new ByteArrayResource(data);
 
         // Rozpoznaj content-type (jpg/png/etc)
-        String contentType = Files.probeContentType(
-                Paths.get(img.getURI())
-        );
+        String contentType = Files.probeContentType(Paths.get(img.getURI()));
         if (contentType == null) {
             contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
         }

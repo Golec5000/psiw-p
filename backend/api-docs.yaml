@@ -149,6 +149,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ScreeningDetailsResponse"
+  /psiw/api/v1/open/movies/{id}/image:
+    get:
+      tags:
+        - movie-image-controller
+      summary: Pobierz obraz filmu
+      description: "Zwraca surowe bajty obrazu powiązanego z podanym ID filmu. Typ\
+        \ zawartości odpowiedzi jest określany dynamicznie (np. image/jpeg, image/png)."
+      operationId: getMovieImage
+      parameters:
+        - name: id
+          in: path
+          description: Unikalny identyfikator filmu
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 42
+      responses:
+        "200":
+          description: Obraz został pomyślnie pobrany
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Film lub jego obraz nie został znaleziony
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        "500":
+          description: Wewnętrzny błąd serwera podczas odczytu obrazu
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
   /psiw/api/v1/auth/ticket-validation/check-staus:
     get:
       tags:
@@ -178,7 +217,7 @@ paths:
                   - VALID
                   - USED
                   - EXPIRED
-                  - INVALID
+                  - TO_BE_CALCULATED
         "400":
           description: Nieprawidłowy identyfikator biletu
 components:
@@ -217,13 +256,13 @@ components:
             - VALID
             - USED
             - EXPIRED
-            - INVALID
+            - TO_BE_CALCULATED
           example: CONFIRMED
         email:
           type: string
           description: Email osoby rezerwującej
           example: john.doe@example.com
-        ticket_owner:
+        ticketOwner:
           type: string
           description: Imię i nazwisko właściciela biletu
           example: John Doe
