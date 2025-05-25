@@ -1,8 +1,8 @@
-package com.psiw.proj.backend.exeptions.handler;
+package com.psiw.proj.backend.exceptions.handler;
 
-import com.psiw.proj.backend.exeptions.custom.RoomHasNoSeatsException;
-import com.psiw.proj.backend.exeptions.custom.ScreeningNotFoundException;
-import com.psiw.proj.backend.exeptions.custom.TicketNotFoundException;
+import com.psiw.proj.backend.exceptions.custom.RoomHasNoSeatsException;
+import com.psiw.proj.backend.exceptions.custom.ScreeningNotFoundException;
+import com.psiw.proj.backend.exceptions.custom.TicketNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;

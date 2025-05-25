@@ -1,4 +1,4 @@
-package com.psiw.proj.backend.exeptions.custom;
+package com.psiw.proj.backend.exceptions.custom;
 
 public class RoomHasNoSeatsException extends RuntimeException {
     public RoomHasNoSeatsException(String message) {

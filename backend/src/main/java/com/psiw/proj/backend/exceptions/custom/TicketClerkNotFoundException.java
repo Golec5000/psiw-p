@@ -1,4 +1,4 @@
-package com.psiw.proj.backend.exeptions.custom;
+package com.psiw.proj.backend.exceptions.custom;
 
 public class TicketClerkNotFoundException extends RuntimeException {
     public TicketClerkNotFoundException(String message) {

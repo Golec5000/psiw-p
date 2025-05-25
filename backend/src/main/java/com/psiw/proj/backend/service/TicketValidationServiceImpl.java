@@ -1,7 +1,7 @@
 package com.psiw.proj.backend.service;
 
 import com.psiw.proj.backend.entity.Ticket;
-import com.psiw.proj.backend.exeptions.custom.TicketNotFoundException;
+import com.psiw.proj.backend.exceptions.custom.TicketNotFoundException;
 import com.psiw.proj.backend.repository.TicketRepository;
 import com.psiw.proj.backend.service.interfaces.TicketValidationService;
 import com.psiw.proj.backend.utils.enums.TicketStatus;
@@ -68,7 +68,7 @@ public class TicketValidationServiceImpl implements TicketValidationService {
                 .ticketId(ticketId)
                 .status(ticket.getStatus())
                 .email(ticket.getOwnerEmail())
-                .ticket_owner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
+                .ticketOwner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
                 .price(ticket.getTicketPrice())
                 .build();
     }

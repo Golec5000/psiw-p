@@ -1,6 +1,6 @@
 package com.psiw.proj.backend.config.security.jwtUtils;
 
-import com.psiw.proj.backend.exeptions.custom.TicketClerkNotFoundException;
+import com.psiw.proj.backend.exceptions.custom.TicketClerkNotFoundException;
 import com.psiw.proj.backend.repository.TicketClerkRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -1,7 +1,7 @@
 package com.psiw.proj.backend.service;
 
 import com.psiw.proj.backend.entity.*;
-import com.psiw.proj.backend.exeptions.custom.ScreeningNotFoundException;
+import com.psiw.proj.backend.exceptions.custom.ScreeningNotFoundException;
 import com.psiw.proj.backend.repository.ScreeningRepository;
 import com.psiw.proj.backend.repository.SeatRepository;
 import com.psiw.proj.backend.repository.TicketRepository;
@@ -103,7 +103,7 @@ class ReservationServiceImplTest {
         assertThat(response.status()).isEqualTo(TicketStatus.VALID);
         assertThat(response.ticketId()).isNotNull();
         assertThat(response.email()).isEqualTo(email);
-        assertThat(response.ticket_owner()).isEqualTo(name + " " + surname);
+        assertThat(response.ticketOwner()).isEqualTo(name + " " + surname);
         assertThat(response.price()).isEqualTo(DEFAULT_SEAT_PRICE
                 .multiply(new BigDecimal(request.seatIds().size()))
                 .setScale(2, RoundingMode.HALF_UP));
@@ -211,7 +211,7 @@ class ReservationServiceImplTest {
         assertThat(response.screeningStartTime()).isEqualTo(screening.getStartTime());
         assertThat(response.status()).isEqualTo(TicketStatus.VALID);
         assertThat(response.email()).isEqualTo(email);
-        assertThat(response.ticket_owner()).isEqualTo(name + " " + surname);
+        assertThat(response.ticketOwner()).isEqualTo(name + " " + surname);
         assertThat(response.price()).isEqualTo(DEFAULT_SEAT_PRICE
                 .multiply(new BigDecimal(request.seatIds().size()))
                 .setScale(2, RoundingMode.HALF_UP));

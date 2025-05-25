@@ -3,7 +3,7 @@ package com.psiw.proj.backend.service;
 import com.psiw.proj.backend.entity.Movie;
 import com.psiw.proj.backend.entity.Screening;
 import com.psiw.proj.backend.entity.Ticket;
-import com.psiw.proj.backend.exeptions.custom.TicketNotFoundException;
+import com.psiw.proj.backend.exceptions.custom.TicketNotFoundException;
 import com.psiw.proj.backend.repository.TicketRepository;
 import com.psiw.proj.backend.utils.enums.TicketStatus;
 import com.psiw.proj.backend.utils.responseDto.TicketResponse;
@@ -160,7 +160,7 @@ class TicketValidationServiceImplTest {
                 .ticketId(ticketId)
                 .status(TicketStatus.USED)
                 .email("example@gmail.com")
-                .ticket_owner("John Doe")
+                .ticketOwner("John Doe")
                 .price(DEFAULT_SEAT_PRICE)
                 .build();
 
@@ -181,7 +181,7 @@ class TicketValidationServiceImplTest {
         assertThat(result.movieTitle()).isEqualTo("Expected Movie Title");
         assertThat(result.status()).isEqualTo(TicketStatus.USED);
         assertThat(result.email()).isEqualTo("example@gmail.com");
-        assertThat(result.ticket_owner()).isEqualTo("John Doe");
+        assertThat(result.ticketOwner()).isEqualTo("John Doe");
         assertThat(result.price()).isEqualTo(DEFAULT_SEAT_PRICE);
     }
 
