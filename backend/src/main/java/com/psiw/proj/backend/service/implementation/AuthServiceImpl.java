@@ -62,8 +62,9 @@ public class AuthServiceImpl implements AuthService {
 
         // 5) wygeneruj nowe tokeny
         String newAccess = createToken(user, ACCESS_TOKEN_LIFESPAN_MIN, TokenType.Bearer);
+        String newRefresh = createToken(user, REFRESH_TOKEN_LIFESPAN_MIN, TokenType.Refresh);
 
-        return new LoginResponse(newAccess, null, TokenType.Bearer);
+        return new LoginResponse(newAccess, newRefresh, TokenType.Bearer);
     }
 
     private String createToken(TicketClerk user, long lifespanMin, TokenType type) {
