@@ -44,7 +44,7 @@ public class Ticket {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(nullable = false)
-    private TicketStatus status = TicketStatus.INVALID;
+    private TicketStatus status = TicketStatus.TO_BE_CALCULATED;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference("ticket-screening")

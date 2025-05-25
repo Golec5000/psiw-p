@@ -4,6 +4,7 @@ import com.psiw.proj.backend.entity.Movie;
 import com.psiw.proj.backend.entity.Screening;
 import com.psiw.proj.backend.entity.Ticket;
 import com.psiw.proj.backend.exceptions.custom.TicketNotFoundException;
+import com.psiw.proj.backend.repository.ScreeningRepository;
 import com.psiw.proj.backend.repository.TicketRepository;
 import com.psiw.proj.backend.utils.enums.TicketStatus;
 import com.psiw.proj.backend.utils.responseDto.TicketResponse;
@@ -32,6 +33,9 @@ class TicketValidationServiceImplTest {
 
     @Mock
     private TicketRepository ticketRepository;
+
+    @Mock
+    private ScreeningRepository screeningRepository;
 
     @Mock
     private Clock clock;
@@ -201,5 +205,88 @@ class TicketValidationServiceImplTest {
         assertThatThrownBy(() -> ticketValidationService.scanTicket(ticketId))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Cannot scan ticket in status: USED");
+    }
+
+    @Test
+    void shouldReturnZeroWhenNoExpiredScreenings() {
+        // given
+        LocalDateTime now = LocalDateTime.of(2025, 5, 25, 14, 0);
+        Clock fixedClock = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+        when(clock.instant()).thenReturn(fixedClock.instant());
+        when(clock.getZone()).thenReturn(fixedClock.getZone());
+
+        // 1) stub updateStatusToValid
+        when(ticketRepository.updateStatusToValid(
+                eq(TicketStatus.VALID),
+                eq(TicketStatus.TO_BE_CALCULATED),
+                eq(now),
+                eq(now.plusMinutes(15))
+        )).thenReturn(7);
+
+        // 2) screening started but not yet finished
+        Screening s = Screening.builder()
+                .id(42L)
+                .startTime(now.minusMinutes(10))
+                .duration(Duration.ofMinutes(30))
+                .build();
+        when(screeningRepository.findStartedScreenings(now))
+                .thenReturn(List.of(s));
+
+        // when
+        int result = ticketValidationService.updateTicketStatus();
+
+        // then
+        assertThat(result).isZero();
+        // powinno wykonać updateStatusToValid
+        verify(ticketRepository).updateStatusToValid(
+                TicketStatus.VALID,
+                TicketStatus.TO_BE_CALCULATED,
+                now,
+                now.plusMinutes(15)
+        );
+        // ale nie powinno wygaszać żadnych biletów
+        verify(ticketRepository, never()).expirePastTicketsByScreening(any());
+    }
+
+    @Test
+    void shouldExpirePastTicketsWhenThereAreExpiredScreenings() {
+        // given
+        LocalDateTime now = LocalDateTime.of(2025, 5, 25, 16, 0);
+        Clock fixedClock = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+        when(clock.instant()).thenReturn(fixedClock.instant());
+        when(clock.getZone()).thenReturn(fixedClock.getZone());
+
+        // 1) stub updateStatusToValid
+        when(ticketRepository.updateStatusToValid(
+                any(), any(), any(), any()
+        )).thenReturn(2);
+
+        // 2) screening już zakończony
+        Screening expired = Screening.builder()
+                .id(99L)
+                .startTime(now.minusHours(2))
+                .duration(Duration.ofMinutes(60))
+                .build();
+        when(screeningRepository.findStartedScreenings(now))
+                .thenReturn(List.of(expired));
+
+        // 3) stub expirePastTicketsByScreening
+        when(ticketRepository.expirePastTicketsByScreening(List.of(99L)))
+                .thenReturn(5);
+
+        // when
+        int result = ticketValidationService.updateTicketStatus();
+
+        // then
+        assertThat(result).isEqualTo(5);
+        // powinno wykonać updateStatusToValid
+        verify(ticketRepository).updateStatusToValid(
+                TicketStatus.VALID,
+                TicketStatus.TO_BE_CALCULATED,
+                now,
+                now.plusMinutes(15)
+        );
+        // i wygasić bilety
+        verify(ticketRepository).expirePastTicketsByScreening(List.of(99L));
     }
 }

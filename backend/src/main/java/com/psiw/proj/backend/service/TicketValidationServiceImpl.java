@@ -1,7 +1,9 @@
 package com.psiw.proj.backend.service;
 
+import com.psiw.proj.backend.entity.Screening;
 import com.psiw.proj.backend.entity.Ticket;
 import com.psiw.proj.backend.exceptions.custom.TicketNotFoundException;
+import com.psiw.proj.backend.repository.ScreeningRepository;
 import com.psiw.proj.backend.repository.TicketRepository;
 import com.psiw.proj.backend.service.interfaces.TicketValidationService;
 import com.psiw.proj.backend.utils.enums.TicketStatus;
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class TicketValidationServiceImpl implements TicketValidationService {
 
     private final TicketRepository ticketRepository;
+    private final ScreeningRepository screeningRepository;
     private final Clock clock;
 
     @Override
@@ -71,6 +74,35 @@ public class TicketValidationServiceImpl implements TicketValidationService {
                 .ticketOwner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
                 .price(ticket.getTicketPrice())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public int updateTicketStatus() {
+        LocalDateTime now = LocalDateTime.now(clock);
+
+        // 1) z TO_BE_CALCULATED → VALID
+        int toValid = ticketRepository.updateStatusToValid(
+                TicketStatus.VALID,
+                TicketStatus.TO_BE_CALCULATED,
+                now,
+                now.plusMinutes(15)
+        );
+
+        // 2) Znajdź seanse, które już się zaczęły
+        List<Screening> started = screeningRepository.findStartedScreenings(now);
+
+        // 3) Odfiltruj seanse, które już się skończyły
+        List<Long> expiredIds = started.stream()
+                .filter(s -> s.getStartTime().plus(s.getDuration()).isBefore(now)
+                        || s.getStartTime().plus(s.getDuration()).isEqual(now))
+                .map(Screening::getId)
+                .toList();
+
+        // 4) wygasa bilety tylko dla tych seansów
+        return expiredIds.isEmpty() ?
+                0 : ticketRepository.expirePastTicketsByScreening(expiredIds);
+
     }
 
     private Ticket findExistingTicket(UUID ticketNumber) {

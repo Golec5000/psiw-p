@@ -118,6 +118,86 @@ class TicketRepositoryTest {
         assertThat(tickets).isEmpty();
     }
 
+    @Test
+    void updateStatusToValid_shouldOnlyTouchTicketsWithinNext15Minutes() {
+        // given
+        LocalDateTime now = LocalDateTime.now();
+
+        // seans za 10 minut → kwalifikuje się
+        Screening soon = createAndPersistScreening(now.plusMinutes(10), Duration.ofMinutes(60));
+        Ticket t1 = createAndPersistTicket(soon, TicketStatus.TO_BE_CALCULATED);
+
+        // seans za 20 minut → poza 15-min oknem
+        Screening later = createAndPersistScreening(now.plusMinutes(20), Duration.ofMinutes(60));
+        Ticket t2 = createAndPersistTicket(later, TicketStatus.TO_BE_CALCULATED);
+
+        // seans za 5 minut, ale już VALID → nie powinno się zmienić
+        Screening soonValid = createAndPersistScreening(now.plusMinutes(5), Duration.ofMinutes(60));
+        Ticket t3 = createAndPersistTicket(soonValid, TicketStatus.VALID);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        int updated = ticketRepository.updateStatusToValid(
+                TicketStatus.VALID,
+                TicketStatus.TO_BE_CALCULATED,
+                now,
+                now.plusMinutes(15)
+        );
+
+        entityManager.clear();
+
+        // then
+        assertThat(updated).isEqualTo(1);
+
+        Ticket fetched1 = ticketRepository.findById(t1.getTicketNumber()).get();
+        Ticket fetched2 = ticketRepository.findById(t2.getTicketNumber()).get();
+        Ticket fetched3 = ticketRepository.findById(t3.getTicketNumber()).get();
+
+        assertThat(fetched1.getStatus()).isEqualTo(TicketStatus.VALID);
+        assertThat(fetched2.getStatus()).isEqualTo(TicketStatus.TO_BE_CALCULATED);
+        assertThat(fetched3.getStatus()).isEqualTo(TicketStatus.VALID);
+    }
+
+    @Test
+    void expirePastTicketsByScreening_shouldExpireOnlyGivenScreenings() {
+        // given
+        LocalDateTime now = LocalDateTime.now();
+
+        // skonstruuj 2 seansów: jeden już zakończony, drugi dopiero w przyszłości
+        Screening past = createAndPersistScreening(now.minusHours(2), Duration.ofMinutes(30));
+        Ticket pValid = createAndPersistTicket(past, TicketStatus.VALID);
+        Ticket pToCalc = createAndPersistTicket(past, TicketStatus.TO_BE_CALCULATED);
+        Ticket pUsed = createAndPersistTicket(past, TicketStatus.USED); // nie powinien się zmienić
+
+        Screening future = createAndPersistScreening(now.plusMinutes(10), Duration.ofMinutes(30));
+        Ticket fValid = createAndPersistTicket(future, TicketStatus.VALID);
+        Ticket fToCalc = createAndPersistTicket(future, TicketStatus.TO_BE_CALCULATED);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // kiedy wywołamy
+        int count = ticketRepository.expirePastTicketsByScreening(List.of(past.getId()));
+        entityManager.clear();
+
+        // tylko dwa bilety z przeszłego seansu powinny zmienić status
+        assertThat(count).isEqualTo(2);
+
+        Ticket fetchedPValid = ticketRepository.findById(pValid.getTicketNumber()).get();
+        Ticket fetchedPToCalc = ticketRepository.findById(pToCalc.getTicketNumber()).get();
+        Ticket fetchedPUsed = ticketRepository.findById(pUsed.getTicketNumber()).get();
+        Ticket fetchedFValid = ticketRepository.findById(fValid.getTicketNumber()).get();
+        Ticket fetchedFToCalc = ticketRepository.findById(fToCalc.getTicketNumber()).get();
+
+        assertThat(fetchedPValid.getStatus()).isEqualTo(TicketStatus.EXPIRED);
+        assertThat(fetchedPToCalc.getStatus()).isEqualTo(TicketStatus.EXPIRED);
+        assertThat(fetchedPUsed.getStatus()).isEqualTo(TicketStatus.USED);                // niezmieniony
+        assertThat(fetchedFValid.getStatus()).isEqualTo(TicketStatus.VALID);
+        assertThat(fetchedFToCalc.getStatus()).isEqualTo(TicketStatus.TO_BE_CALCULATED);
+    }
+
     private Seat createSeat(Room room, int col, int seatNumber) {
         return Seat.builder()
                 .room(room)
@@ -134,5 +214,42 @@ class TicketRepositoryTest {
                 .seat(seat)
                 .screening(screening)
                 .build();
+    }
+
+    private Screening createAndPersistScreening(LocalDateTime start, Duration duration) {
+        // pokój
+        Room room = Room.builder().rowCount(3).columnCount(3).build();
+        entityManager.persist(room);
+
+        // unikalny tytuł, np. używamy timestampu
+        String uniqueTitle = "Test " + System.nanoTime();
+        Movie movie = Movie.builder()
+                .title(uniqueTitle)
+                .description("Desc")
+                .image("img")
+                .build();
+        entityManager.persist(movie);
+
+        Screening s = Screening.builder()
+                .movie(movie)
+                .room(room)
+                .startTime(start)
+                .duration(duration)
+                .build();
+        entityManager.persist(s);
+        return s;
+    }
+
+    private Ticket createAndPersistTicket(Screening screening, TicketStatus status) {
+        Ticket t = Ticket.builder()
+                .screening(screening)
+                .status(status)
+                .ownerEmail("a@b.com")
+                .ownerName("X")
+                .ownerSurname("Y")
+                .ticketPrice(BigDecimal.ONE)
+                .build();
+        entityManager.persist(t);
+        return t;
     }
 }
