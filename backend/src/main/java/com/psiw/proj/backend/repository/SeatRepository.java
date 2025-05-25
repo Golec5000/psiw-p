@@ -12,5 +12,5 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
      *  – należy do podanego roomNumber
      * Jeśli wynik == seatIds.size(), to znaczy, że wszystkie istnieją i są w tej samej sali.
      */
-    long countByIdInAndRoomRoomNumber(Collection<Long> seatIds, Long roomNumber);
+    long countByIdInAndRoomRoomNumber(Collection<Long> seatIds, String roomNumber);
 }

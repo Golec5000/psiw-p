@@ -50,6 +50,7 @@ class TicketSeatRepositoryTest {
     void shouldAllowSameSeatForDifferentScreenings() {
         // given
         Room room = roomRepository.save(Room.builder()
+                .roomNumber(uniqueRoomNumber())
                 .rowCount(10)
                 .columnCount(10)
                 .build());
@@ -133,8 +134,9 @@ class TicketSeatRepositoryTest {
     void shouldReturnSeatIdsTakenForGivenScreening() {
         // given
         Room room = roomRepository.save(Room.builder()
-                .rowCount(5)
-                .columnCount(5)
+                .roomNumber(uniqueRoomNumber())
+                .rowCount(10)
+                .columnCount(10)
                 .build());
 
         Seat seat1 = seatRepository.save(Seat.builder()
@@ -205,8 +207,9 @@ class TicketSeatRepositoryTest {
                 .image("img")
                 .build());
         Room room = roomRepository.save(Room.builder()
-                .rowCount(3)
-                .columnCount(3)
+                .roomNumber(uniqueRoomNumber())
+                .rowCount(10)
+                .columnCount(10)
                 .build());
 
         Screening screening = screeningRepository.save(Screening.builder()
@@ -242,8 +245,9 @@ class TicketSeatRepositoryTest {
     void shouldHandleMixedScreeningsGracefully() {
         // setup: create 2 screenings, one with seats, one without
         Room room = roomRepository.save(Room.builder()
-                .rowCount(5)
-                .columnCount(5)
+                .roomNumber(uniqueRoomNumber())
+                .rowCount(10)
+                .columnCount(10)
                 .build());
         Movie movie = movieRepository.save(Movie.builder()
                 .title("Multi")
@@ -302,8 +306,9 @@ class TicketSeatRepositoryTest {
     void shouldReturnEmptySetWhenTicketSeatsAreForOtherScreenings() {
         // given
         Room room = roomRepository.save(Room.builder()
-                .rowCount(3)
-                .columnCount(3)
+                .roomNumber(uniqueRoomNumber())
+                .rowCount(10)
+                .columnCount(10)
                 .build());
         Movie movie = movieRepository.save(Movie.builder()
                 .title("Mismatch")
@@ -361,8 +366,9 @@ class TicketSeatRepositoryTest {
     void shouldThrowExceptionWhenSameSeatAssignedToMultipleTicketsInSameScreening() {
         // given
         Room room = roomRepository.save(Room.builder()
-                .rowCount(5)
-                .columnCount(5)
+                .roomNumber(uniqueRoomNumber())
+                .rowCount(10)
+                .columnCount(10)
                 .build());
         Seat seat = seatRepository.save(Seat.builder()
                 .rowNumber(5)
@@ -420,5 +426,9 @@ class TicketSeatRepositoryTest {
                         .seat(seat)
                         .build())
         ).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    }
+
+    private String uniqueRoomNumber() {
+        return "R-" + System.nanoTime();
     }
 }

@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record RoomDto(
-        Long roomNumber,
+        String roomNumber,
         int rowCount,
         int columnCount
 ) {}

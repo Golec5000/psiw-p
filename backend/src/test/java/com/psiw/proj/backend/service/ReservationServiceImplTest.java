@@ -57,7 +57,7 @@ class ReservationServiceImplTest {
         String name = "John";
         String surname = "Doe";
 
-        Room room = Room.builder().roomNumber(5L).build();
+        Room room = Room.builder().roomNumber("A1").build();
         Movie movie = Movie.builder().title("Matrix").build();
         Screening screening = Screening.builder()
                 .id(screeningId)
@@ -83,7 +83,7 @@ class ReservationServiceImplTest {
                 .build();
 
         when(screeningRepository.findById(screeningId)).thenReturn(Optional.of(screening));
-        when(seatRepository.countByIdInAndRoomRoomNumber(seatIds, 5L)).thenReturn(2L);
+        when(seatRepository.countByIdInAndRoomRoomNumber(seatIds, "A1")).thenReturn(2L);
         when(ticketRepository.findAllByScreeningId(screeningId)).thenReturn(List.of());
         when(seatRepository.findAllById(seatIds)).thenReturn(List.of(seat1, seat2));
         when(ticketRepository.save(any())).thenAnswer(inv -> {
@@ -124,10 +124,10 @@ class ReservationServiceImplTest {
     @Test
     void shouldThrowWhenSeatsAreNotFromSameRoom() {
         Long screeningId = 2L;
-        Room room = Room.builder().roomNumber(99L).build();
+        Room room = Room.builder().roomNumber("B99").build();
         Screening screening = Screening.builder().id(screeningId).room(room).build();
         when(screeningRepository.findById(screeningId)).thenReturn(Optional.of(screening));
-        when(seatRepository.countByIdInAndRoomRoomNumber(List.of(1L, 2L), 99L)).thenReturn(1L);
+        when(seatRepository.countByIdInAndRoomRoomNumber(List.of(1L, 2L), "B99")).thenReturn(1L);
 
         ReservationRequest request = new ReservationRequest(screeningId, List.of(1L, 2L), "a@b.com", "A", "B");
         assertThatThrownBy(() -> reservationService.reserveSeats(request))
@@ -139,14 +139,14 @@ class ReservationServiceImplTest {
     void shouldThrowWhenAnySeatIsAlreadyTaken() {
         Long screeningId = 3L;
         List<Long> seatIds = List.of(10L, 11L);
-        Room room = Room.builder().roomNumber(1L).build();
+        Room room = Room.builder().roomNumber("A1").build();
         Screening screening = Screening.builder().id(screeningId).room(room).build();
         Seat seat = Seat.builder().id(10L).build();
         TicketSeat ts = TicketSeat.builder().seat(seat).build();
         Ticket ticket = Ticket.builder().ticketSeats(List.of(ts)).build();
 
         when(screeningRepository.findById(screeningId)).thenReturn(Optional.of(screening));
-        when(seatRepository.countByIdInAndRoomRoomNumber(seatIds, 1L)).thenReturn(2L);
+        when(seatRepository.countByIdInAndRoomRoomNumber(seatIds, "A1")).thenReturn(2L);
         when(ticketRepository.findAllByScreeningId(screeningId)).thenReturn(List.of(ticket));
 
         ReservationRequest request = new ReservationRequest(screeningId, seatIds, "a@b.com", "A", "B");
@@ -163,7 +163,7 @@ class ReservationServiceImplTest {
         String name = "Foo";
         String surname = "Bar";
 
-        Room room = Room.builder().roomNumber(77L).build();
+        Room room = Room.builder().roomNumber("C77").build();
         Movie movie = Movie.builder().title("John Wick").build();
         Screening screening = Screening.builder()
                 .id(screeningId)
@@ -189,7 +189,7 @@ class ReservationServiceImplTest {
                 .build();
 
         when(screeningRepository.findById(screeningId)).thenReturn(Optional.of(screening));
-        when(seatRepository.countByIdInAndRoomRoomNumber(seatIds, 77L)).thenReturn(2L);
+        when(seatRepository.countByIdInAndRoomRoomNumber(seatIds, "C77")).thenReturn(2L);
         when(ticketRepository.findAllByScreeningId(screeningId)).thenReturn(List.of());
         when(seatRepository.findAllById(seatIds)).thenReturn(List.of(seat1, seat2));
 

@@ -40,11 +40,11 @@ public class DBInit {
 
         // 1. Create rooms with different sizes
         List<Room> rooms = roomRepository.saveAll(List.of(
-                Room.builder().rowCount(5).columnCount(5).build(),
-                Room.builder().rowCount(8).columnCount(10).build(),
-                Room.builder().rowCount(6).columnCount(7).build(),
-                Room.builder().rowCount(10).columnCount(12).build(),
-                Room.builder().rowCount(4).columnCount(6).build()
+                Room.builder().roomNumber("A1").rowCount(5).columnCount(5).build(),
+                Room.builder().roomNumber("A2").rowCount(8).columnCount(10).build(),
+                Room.builder().roomNumber("B1").rowCount(6).columnCount(7).build(),
+                Room.builder().roomNumber("B2").rowCount(10).columnCount(12).build(),
+                Room.builder().roomNumber("C1").rowCount(4).columnCount(6).build()
         ));
 
         log.info("Rooms found: {}", rooms.size());

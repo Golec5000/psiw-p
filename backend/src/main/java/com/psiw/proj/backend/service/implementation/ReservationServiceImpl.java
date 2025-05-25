@@ -40,7 +40,7 @@ public class ReservationServiceImpl implements ReservationService {
         Screening screening = screeningRepository.findById(reservationRequest.screeningId())
                 .orElseThrow(() -> new ScreeningNotFoundException("Screening not found: " + reservationRequest.screeningId()));
 
-        Long roomNo = screening.getRoom().getRoomNumber();
+        String roomNo = screening.getRoom().getRoomNumber();
         long matching = seatRepository.countByIdInAndRoomRoomNumber(reservationRequest.seatIds(), roomNo);
         if (matching != reservationRequest.seatIds().size())
             throw new IllegalArgumentException("One or more seats not found or not in the same room");

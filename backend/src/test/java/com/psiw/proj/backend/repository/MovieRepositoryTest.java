@@ -39,6 +39,7 @@ class MovieRepositoryTest {
 
         // tworzę salę
         Room room = Room.builder()
+                .roomNumber(uniqueRoomNumber())
                 .rowCount(10)
                 .columnCount(10)
                 .build();
@@ -94,7 +95,7 @@ class MovieRepositoryTest {
         LocalDateTime from = targetDate.atStartOfDay();
         LocalDateTime to = targetDate.plusDays(1).atStartOfDay();
 
-        Room room = Room.builder().rowCount(5).columnCount(5).build();
+        Room room = Room.builder().roomNumber(uniqueRoomNumber()).rowCount(5).columnCount(5).build();
         Movie movie = Movie.builder()
                 .title("Out of Range Movie")
                 .description("This won't match")
@@ -132,7 +133,7 @@ class MovieRepositoryTest {
         LocalDateTime from = now.plusDays(1).toLocalDate().atStartOfDay();
         LocalDateTime to = from.plusDays(1);
 
-        Room room = Room.builder().rowCount(10).columnCount(10).build();
+        Room room = Room.builder().rowCount(10).roomNumber(uniqueRoomNumber()).columnCount(10).build();
         Movie movie = Movie.builder()
                 .title("Partial Range Movie")
                 .description("Only one screening matches")
@@ -178,7 +179,7 @@ class MovieRepositoryTest {
         LocalDateTime from = LocalDate.now().plusDays(1).atStartOfDay();
         LocalDateTime to = from.plusDays(1);
 
-        Room room = Room.builder().rowCount(5).columnCount(5).build();
+        Room room = Room.builder().roomNumber(uniqueRoomNumber()).rowCount(5).columnCount(5).build();
         entityManager.persist(room);
 
         for (int i = 1; i <= 3; i++) {
@@ -228,5 +229,9 @@ class MovieRepositoryTest {
 
         List<Movie> movies = movieRepository.findDistinctByScreeningsStartTimeBetween(from, to);
         assertThat(movies).isEmpty();
+    }
+
+    private String uniqueRoomNumber() {
+        return "R-" + System.nanoTime();
     }
 }

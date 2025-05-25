@@ -32,6 +32,7 @@ class SeatRepositoryTest {
     void shouldReturnCorrectCountWhenAllSeatsExistInRoom() {
         // given
         Room room = Room.builder()
+                .roomNumber(uniqueRoomNumber())
                 .rowCount(10)
                 .columnCount(10)
                 .build();
@@ -58,6 +59,7 @@ class SeatRepositoryTest {
     void shouldReturnLowerCountWhenSomeSeatsDoNotExist() {
         // given
         Room room = Room.builder()
+                .roomNumber(uniqueRoomNumber())
                 .rowCount(5)
                 .columnCount(5)
                 .build();
@@ -81,8 +83,8 @@ class SeatRepositoryTest {
     @Test
     void shouldReturnLowerCountWhenSeatsBelongToDifferentRooms() {
         // given
-        Room room1 = Room.builder().rowCount(3).columnCount(3).build();
-        Room room2 = Room.builder().rowCount(3).columnCount(3).build();
+        Room room1 = Room.builder().roomNumber(uniqueRoomNumber()).rowCount(3).columnCount(3).build();
+        Room room2 = Room.builder().roomNumber(uniqueRoomNumber()).rowCount(3).columnCount(3).build();
         entityManager.persist(room1);
         entityManager.persist(room2);
 
@@ -106,7 +108,7 @@ class SeatRepositoryTest {
     @Test
     void shouldReturnZeroWhenSeatIdsAreEmpty() {
         // when
-        long count = seatRepository.countByIdInAndRoomRoomNumber(Collections.emptyList(), 1L);
+        long count = seatRepository.countByIdInAndRoomRoomNumber(Collections.emptyList(), "Empty");
 
         // then
         assertThat(count).isZero();
@@ -120,5 +122,9 @@ class SeatRepositoryTest {
                 .seatNumber(col)
                 .seatPrice(BigDecimal.valueOf(1.0))
                 .build();
+    }
+
+    private String uniqueRoomNumber() {
+        return "R-" + System.nanoTime();
     }
 }

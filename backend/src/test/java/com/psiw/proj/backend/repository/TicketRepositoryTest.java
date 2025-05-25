@@ -32,7 +32,7 @@ class TicketRepositoryTest {
     @Test
     void shouldLoadTicketsWithSeatsForGivenScreening() {
         // given
-        Room room = Room.builder().rowCount(5).columnCount(5).build();
+        Room room = Room.builder().roomNumber("A1").rowCount(5).columnCount(5).build();
         entityManager.persist(room);
 
         Seat seat1 = createSeat(room, 1, 1);
@@ -90,7 +90,7 @@ class TicketRepositoryTest {
     @Test
     void shouldReturnEmptyListWhenNoTicketsExistForScreening() {
         // given
-        Room room = Room.builder().rowCount(3).columnCount(3).build();
+        Room room = Room.builder().roomNumber("E1").rowCount(3).columnCount(3).build();
         entityManager.persist(room);
 
         Movie movie = Movie.builder()
@@ -217,12 +217,17 @@ class TicketRepositoryTest {
     }
 
     private Screening createAndPersistScreening(LocalDateTime start, Duration duration) {
-        // pokój
-        Room room = Room.builder().rowCount(3).columnCount(3).build();
+        // generujemy unikalną nazwę pokoju
+        String roomNumber = "R-" + System.nanoTime();
+
+        Room room = Room.builder()
+                .roomNumber(roomNumber)
+                .rowCount(3)
+                .columnCount(3)
+                .build();
         entityManager.persist(room);
 
-        // unikalny tytuł, np. używamy timestampu
-        String uniqueTitle = "Test " + System.nanoTime();
+        String uniqueTitle = "TestMovie" + System.nanoTime();
         Movie movie = Movie.builder()
                 .title(uniqueTitle)
                 .description("Desc")
@@ -239,6 +244,7 @@ class TicketRepositoryTest {
         entityManager.persist(s);
         return s;
     }
+
 
     private Ticket createAndPersistTicket(Screening screening, TicketStatus status) {
         Ticket t = Ticket.builder()
