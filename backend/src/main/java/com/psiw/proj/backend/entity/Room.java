@@ -19,7 +19,10 @@ public class Room {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long roomNumber;
+    private Long id;
+
+    @Column(name = "room_number", nullable = false, unique = true)
+    private String roomNumber;
 
     @Column(name = "row_count", nullable = false)
     @Min(1)

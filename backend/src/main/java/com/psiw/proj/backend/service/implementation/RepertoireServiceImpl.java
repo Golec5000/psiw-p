@@ -1,10 +1,10 @@
-package com.psiw.proj.backend.service;
+package com.psiw.proj.backend.service.implementation;
 
 import com.psiw.proj.backend.entity.Movie;
 import com.psiw.proj.backend.entity.Screening;
 import com.psiw.proj.backend.entity.Seat;
-import com.psiw.proj.backend.exeptions.custom.RoomHasNoSeatsException;
-import com.psiw.proj.backend.exeptions.custom.ScreeningNotFoundException;
+import com.psiw.proj.backend.exceptions.custom.RoomHasNoSeatsException;
+import com.psiw.proj.backend.exceptions.custom.ScreeningNotFoundException;
 import com.psiw.proj.backend.repository.MovieRepository;
 import com.psiw.proj.backend.repository.ScreeningRepository;
 import com.psiw.proj.backend.repository.TicketSeatRepository;

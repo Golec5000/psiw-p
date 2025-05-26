@@ -4,11 +4,12 @@ import com.psiw.proj.backend.entity.Movie;
 import com.psiw.proj.backend.entity.Room;
 import com.psiw.proj.backend.entity.Screening;
 import com.psiw.proj.backend.entity.Seat;
-import com.psiw.proj.backend.exeptions.custom.RoomHasNoSeatsException;
-import com.psiw.proj.backend.exeptions.custom.ScreeningNotFoundException;
+import com.psiw.proj.backend.exceptions.custom.RoomHasNoSeatsException;
+import com.psiw.proj.backend.exceptions.custom.ScreeningNotFoundException;
 import com.psiw.proj.backend.repository.MovieRepository;
 import com.psiw.proj.backend.repository.ScreeningRepository;
 import com.psiw.proj.backend.repository.TicketSeatRepository;
+import com.psiw.proj.backend.service.implementation.RepertoireServiceImpl;
 import com.psiw.proj.backend.utils.responseDto.MovieResponse;
 import com.psiw.proj.backend.utils.responseDto.ScreeningDetailsResponse;
 import com.psiw.proj.backend.utils.responseDto.helpers.SeatDto;
@@ -53,7 +54,7 @@ class RepertoireServiceImplTest {
         LocalDateTime to = date.plusDays(1).atStartOfDay();
 
         Room room = Room.builder()
-                .roomNumber(1L)
+                .roomNumber("A1")
                 .rowCount(5)
                 .columnCount(5)
                 .build();
@@ -95,7 +96,7 @@ class RepertoireServiceImplTest {
         Long screeningId = 1L;
 
         Room room = Room.builder()
-                .roomNumber(1L)
+                .roomNumber("A1")
                 .rowCount(3)
                 .columnCount(3)
                 .build();
@@ -140,7 +141,7 @@ class RepertoireServiceImplTest {
         // then
         assertThat(result.id()).isEqualTo(screeningId);
         assertThat(result.movie().title()).isEqualTo("Avengers");
-        assertThat(result.room().roomNumber()).isEqualTo(1L);
+        assertThat(result.room().roomNumber()).isEqualTo("A1");
         assertThat(result.seats()).hasSize(2);
 
         var seatDto1 = result.seats().stream()
@@ -225,7 +226,7 @@ class RepertoireServiceImplTest {
                 .movie(movie)
                 .startTime(from.plusHours(10))
                 .duration(Duration.ofMinutes(100))
-                .room(Room.builder().roomNumber(1L).build())
+                .room(Room.builder().roomNumber("A1").build())
                 .build();
 
         Screening s2 = Screening.builder()
@@ -233,7 +234,7 @@ class RepertoireServiceImplTest {
                 .movie(movie)
                 .startTime(from.plusHours(16))
                 .duration(Duration.ofMinutes(100))
-                .room(Room.builder().roomNumber(1L).build())
+                .room(Room.builder().roomNumber("A1").build())
                 .build();
 
         movie.setScreenings(List.of(s1, s2));
@@ -254,7 +255,7 @@ class RepertoireServiceImplTest {
         Long screeningId = 2L;
 
         Room room = Room.builder()
-                .roomNumber(3L)
+                .roomNumber("A1")
                 .rowCount(2)
                 .columnCount(2)
                 .build();
@@ -306,7 +307,7 @@ class RepertoireServiceImplTest {
         Long screeningId = 3L;
 
         Room room = Room.builder()
-                .roomNumber(2L)
+                .roomNumber("A1")
                 .rowCount(1)
                 .columnCount(2)
                 .build();
@@ -356,7 +357,7 @@ class RepertoireServiceImplTest {
     void shouldHandleNullSeatsGracefully() {
         // given
         Long screeningId = 4L;
-        Room room = Room.builder().roomNumber(4L).rowCount(1).columnCount(1).seats(null).build();
+        Room room = Room.builder().roomNumber("A1").rowCount(1).columnCount(1).seats(null).build();
 
         Movie movie = Movie.builder().id(4L).title("Null Seat Movie").build();
 
@@ -381,7 +382,7 @@ class RepertoireServiceImplTest {
     void shouldHandleEmptySeatsGracefully() {
         // given
         Long screeningId = 5L;
-        Room room = Room.builder().roomNumber(5L).rowCount(1).columnCount(1).seats(List.of()).build();
+        Room room = Room.builder().roomNumber("A1").rowCount(1).columnCount(1).seats(List.of()).build();
 
         Movie movie = Movie.builder().id(5L).title("Empty Room").build();
 

@@ -2,6 +2,7 @@ package com.psiw.proj.backend.controller;
 
 import com.psiw.proj.backend.service.interfaces.AuthService;
 import com.psiw.proj.backend.utils.aspects.LogExecution;
+import com.psiw.proj.backend.utils.enums.TokenType;
 import com.psiw.proj.backend.utils.responseDto.LoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -9,9 +10,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,5 +39,22 @@ public class LoginController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(Authentication authentication) {
         return ResponseEntity.ok(authService.login(authentication));
+    }
+
+    @Operation(summary = "Refresh JWT tokens",
+            description = "Na podstawie ważnego refresh tokena zwraca nową parę access+refresh tokenów.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tokens refreshed"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(
+            @RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith(TokenType.Refresh.name() + " ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String refreshToken = authHeader.substring(TokenType.Refresh.name().length() + 1);
+        LoginResponse resp = authService.refresh(refreshToken);
+        return ResponseEntity.ok(resp);
     }
 }

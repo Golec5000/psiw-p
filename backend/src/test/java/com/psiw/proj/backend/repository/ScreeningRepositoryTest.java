@@ -36,6 +36,7 @@ class ScreeningRepositoryTest {
         // given
         Room room = Room.builder()
                 .rowCount(5)
+                .roomNumber("R1")
                 .columnCount(5)
                 .build();
         entityManager.persist(room);

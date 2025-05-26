@@ -32,7 +32,7 @@ public record TicketResponse(
         String email,
 
         @Schema(description = "Imię i nazwisko właściciela biletu", example = "John Doe")
-        String ticket_owner,
+        String ticketOwner,
 
         @Schema(description = "Łączna cena biletu", example = "59.99")
         BigDecimal price

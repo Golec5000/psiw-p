@@ -40,11 +40,11 @@ public class DBInit {
 
         // 1. Create rooms with different sizes
         List<Room> rooms = roomRepository.saveAll(List.of(
-                Room.builder().rowCount(5).columnCount(5).build(),
-                Room.builder().rowCount(8).columnCount(10).build(),
-                Room.builder().rowCount(6).columnCount(7).build(),
-                Room.builder().rowCount(10).columnCount(12).build(),
-                Room.builder().rowCount(4).columnCount(6).build()
+                Room.builder().roomNumber("A1").rowCount(5).columnCount(5).build(),
+                Room.builder().roomNumber("A2").rowCount(8).columnCount(10).build(),
+                Room.builder().roomNumber("B1").rowCount(6).columnCount(7).build(),
+                Room.builder().roomNumber("B2").rowCount(10).columnCount(12).build(),
+                Room.builder().roomNumber("C1").rowCount(4).columnCount(6).build()
         ));
 
         log.info("Rooms found: {}", rooms.size());
@@ -67,13 +67,81 @@ public class DBInit {
 
         // 3. Create sample movies
         List<Movie> movies = movieRepository.saveAll(List.of(
-                Movie.builder().title("Inception").description("Sci-fi thriller").image("inception.jpg").build(),
-                Movie.builder().title("The Matrix").description("Virtual reality action").image("matrix.jpg").build(),
-                Movie.builder().title("Interstellar").description("Space-time journey").image("interstellar.jpg").build(),
-                Movie.builder().title("The Dark Knight").description("Gotham vigilante").image("dark_knight.jpg").build(),
-                Movie.builder().title("Avatar").description("Epic science fiction").image("avatar.jpg").build(),
-                Movie.builder().title("Parasite").description("Thriller from Korea").image("parasite.jpg").build()
+                Movie.builder()
+                        .title("Inception")
+                        .description(
+                                "Dom Cobb is a skilled extractor who enters the dreams of others to " +
+                                        "steal hidden secrets. When offered a chance to have his criminal record " +
+                                        "wiped clean, he must perform an almost impossible ‘inception’: " +
+                                        "planting an idea into someone’s subconscious. As the boundaries between " +
+                                        "dream and reality blur, Cobb’s own memories threaten to " +
+                                        "jeopardize the mission—and his very sanity."
+                        )
+                        .image("inception.jpg")
+                        .build(),
+
+                Movie.builder()
+                        .title("The Matrix")
+                        .description(
+                                "Thomas Anderson, a mild-mannered software developer by day and notorious hacker ‘Neo’ " +
+                                        "by night, discovers that the world around him is a simulated reality controlled " +
+                                        "by sentient machines. Guided by the enigmatic Morpheus and fierce warrior Trinity, " +
+                                        "Neo must embrace his destiny as ‘The One’ to lead humanity’s rebellion. " +
+                                        "A groundbreaking fusion of philosophy, cyberpunk aesthetics, and revolutionary action sequences."
+                        )
+                        .image("matrix.jpg")
+                        .build(),
+
+                Movie.builder()
+                        .title("Interstellar")
+                        .description(
+                                "With Earth facing ecological collapse, former pilot Cooper joins a daring mission " +
+                                        "through a wormhole to find a new home for humanity. Alongside a team of " +
+                                        "scientists, he confronts the profound mysteries of time, gravity, and love, " +
+                                        "as he races against time to save his children’s future. A visually stunning " +
+                                        "odyssey that explores the bonds that transcend space and the limits of human endurance."
+                        )
+                        .image("interstellar.jpg")
+                        .build(),
+
+                Movie.builder()
+                        .title("The Dark Knight")
+                        .description(
+                                "Gotham City teeters on the brink of anarchy as Batman’s crusade against crime escalates" +
+                                        " into a battle of wills with the twisted Joker. As chaos spreads and moral" +
+                                        " lines blur, Batman must confront his own code of ethics—or risk losing " +
+                                        "everything he’s sworn to protect. A dark, gripping masterpiece that redefined" +
+                                        " the superhero genre with its depth, intensity, and unforgettable performances."
+                        )
+                        .image("dark_knight.jpg")
+                        .build(),
+
+                Movie.builder()
+                        .title("Avatar")
+                        .description(
+                                "Sent to the lush moon of Pandora as part of a colonial operation, paraplegic Marine " +
+                                        "Jake Sully finds himself torn between his orders and the world of the Na’vi, " +
+                                        "Pandora’s indigenous people. Through the Avatar Program, he begins to understand " +
+                                        "the profound spiritual connection the Na’vi share with their environment—and " +
+                                        "falls in love with both their culture and a tribal princess. James Cameron’s " +
+                                        "visionary epic melds cutting-edge visual effects with an environmental parable " +
+                                        "of love and conflict."
+                        )
+                        .image("avatar.jpg")
+                        .build(),
+
+                Movie.builder()
+                        .title("Parasite")
+                        .description("When the impoverished Kim family cons their way into the lives of the wealthy " +
+                                "Parks, they taste the comforts and privileges of a world far removed from their own. " +
+                                "But as alliances shift and secrets surface, a darkly comedic chain of events spirals " +
+                                "into violence and tragedy. Bong Joon-ho’s Oscar®-winning tour de force skewers class " +
+                                "disparity with razor-sharp wit, unpredictable twists, and unforgettable imagery."
+                        )
+                        .image("parasite.jpg")
+                        .build()
         ));
+
 
         log.info("Movies found: {}", movies.size());
 
@@ -124,5 +192,4 @@ public class DBInit {
             log.info("Admin user created: {}", username);
         }
     }
-
 }

@@ -1,4 +1,4 @@
-package com.psiw.proj.backend.exeptions.handler;
+package com.psiw.proj.backend.exceptions.handler;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

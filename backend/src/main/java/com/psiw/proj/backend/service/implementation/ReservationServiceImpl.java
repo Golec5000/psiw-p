@@ -1,10 +1,10 @@
-package com.psiw.proj.backend.service;
+package com.psiw.proj.backend.service.implementation;
 
 import com.psiw.proj.backend.entity.Screening;
 import com.psiw.proj.backend.entity.Seat;
 import com.psiw.proj.backend.entity.Ticket;
 import com.psiw.proj.backend.entity.TicketSeat;
-import com.psiw.proj.backend.exeptions.custom.ScreeningNotFoundException;
+import com.psiw.proj.backend.exceptions.custom.ScreeningNotFoundException;
 import com.psiw.proj.backend.repository.ScreeningRepository;
 import com.psiw.proj.backend.repository.SeatRepository;
 import com.psiw.proj.backend.repository.TicketRepository;
@@ -40,7 +40,7 @@ public class ReservationServiceImpl implements ReservationService {
         Screening screening = screeningRepository.findById(reservationRequest.screeningId())
                 .orElseThrow(() -> new ScreeningNotFoundException("Screening not found: " + reservationRequest.screeningId()));
 
-        Long roomNo = screening.getRoom().getRoomNumber();
+        String roomNo = screening.getRoom().getRoomNumber();
         long matching = seatRepository.countByIdInAndRoomRoomNumber(reservationRequest.seatIds(), roomNo);
         if (matching != reservationRequest.seatIds().size())
             throw new IllegalArgumentException("One or more seats not found or not in the same room");
@@ -70,7 +70,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .ticketId(ticket.getTicketNumber())
                 .status(ticket.getStatus())
                 .email(ticket.getOwnerEmail())
-                .ticket_owner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
+                .ticketOwner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
                 .price(ticket.getTicketPrice())
                 .build();
     }
