@@ -11,6 +11,4 @@ public interface TicketValidationService {
 
     TicketResponse scanTicket(UUID ticketNumber);
 
-    int updateTicketStatus();
-
 }

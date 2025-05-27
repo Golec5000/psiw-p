@@ -60,7 +60,7 @@ public class RepertoireServiceImpl implements RepertoireService {
                 new MovieSimpleDto(s.getMovie().getId(), s.getMovie().getTitle()),
                 new RoomDto(s.getRoom().getRoomNumber(), s.getRoom().getRowCount(), s.getRoom().getColumnCount()),
                 s.getStartTime(),
-                s.getDuration(),
+                s.getDuration().toMinutes(),
                 getSeatDtos(seatList, taken)
         );
     }
@@ -73,11 +73,7 @@ public class RepertoireServiceImpl implements RepertoireService {
                         m.getDescription(),
                         m.getImage(),
                         m.getScreenings().stream()
-                                .map(s -> new ScreeningSummaryDto(
-                                        s.getId(),
-                                        s.getStartTime(),
-                                        s.getDuration()
-                                ))
+                                .map(this::createScreeningDto)
                                 .toList()
                 ))
                 .toList();
@@ -93,5 +89,13 @@ public class RepertoireServiceImpl implements RepertoireService {
                         !taken.contains(seat.getId())
                 ))
                 .toList();
+    }
+
+    private ScreeningSummaryDto createScreeningDto(Screening screening) {
+        return ScreeningSummaryDto.builder()
+                .id(screening.getId())
+                .startTime(screening.getStartTime())
+                .duration(screening.getDuration().toMinutes())
+                .build();
     }
 }

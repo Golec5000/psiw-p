@@ -87,7 +87,7 @@ class RepertoireServiceImplTest {
         assertThat(response.title()).isEqualTo("Test Movie");
         assertThat(response.screenings()).hasSize(1);
         assertThat(response.screenings().getFirst().startTime()).isEqualTo(screening.getStartTime());
-        assertThat(response.screenings().getFirst().duration()).isEqualTo(screening.getDuration());
+        assertThat(response.screenings().getFirst().duration()).isEqualTo(screening.getDuration().toMinutes());
     }
 
     @Test

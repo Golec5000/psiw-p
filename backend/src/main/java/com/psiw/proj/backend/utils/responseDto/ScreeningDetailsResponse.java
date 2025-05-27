@@ -6,7 +6,6 @@ import com.psiw.proj.backend.utils.responseDto.helpers.SeatDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,8 +24,8 @@ public record ScreeningDetailsResponse(
         @Schema(description = "Czas rozpoczęcia", example = "2025-05-23T20:00:00")
         LocalDateTime startTime,
 
-        @Schema(description = "Czas trwania")
-        Duration duration,
+        @Schema(description = "Czas trwania", example = "120")
+        Long duration,
 
         @Schema(description = "Lista dostępnych miejsc")
         List<SeatDto> seats
