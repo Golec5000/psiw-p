@@ -1,19 +1,22 @@
 package com.psiw.proj.backend.service;
 
-import com.psiw.proj.backend.entity.Screening;
-import com.psiw.proj.backend.entity.Ticket;
+import com.psiw.proj.backend.entity.*;
 import com.psiw.proj.backend.exceptions.custom.TicketNotFoundException;
-import com.psiw.proj.backend.repository.ScreeningRepository;
 import com.psiw.proj.backend.repository.TicketRepository;
 import com.psiw.proj.backend.service.implementation.TicketValidationServiceImpl;
 import com.psiw.proj.backend.utils.enums.TicketStatus;
+import com.psiw.proj.backend.utils.responseDto.TicketResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -27,152 +30,210 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class TicketValidationServiceImplTest {
 
     @Mock
     private TicketRepository ticketRepository;
 
     @Mock
-    private ScreeningRepository screeningRepository;
-
-    @Mock
     private Clock clock;
 
     @InjectMocks
     @Spy
-    private TicketValidationServiceImpl ticketValidationService;
+    private TicketValidationServiceImpl service;
 
-    @Test
-    void shouldReturnStatusIfTicketNotValid() {
-        // given
-        UUID ticketId = UUID.randomUUID();
-        Ticket ticket = Ticket.builder()
-                .ticketNumber(ticketId)
-                .status(TicketStatus.USED) // already used
-                .screening(mock(Screening.class))
+    // "stały" zegar dla wszystkich testów
+    private static final LocalDateTime fixedNow = LocalDateTime.of(2025, 5, 25, 12, 0);
+    private static final Clock fixedClock = Clock.fixed(
+            fixedNow.atZone(ZoneId.systemDefault()).toInstant(),
+            ZoneId.systemDefault()
+    );
+
+    private static final UUID ticketId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+
+    @BeforeEach
+    void initClock() {
+        when(clock.instant()).thenReturn(fixedClock.instant());
+        when(clock.getZone()).thenReturn(fixedClock.getZone());
+    }
+
+    private Ticket buildTicket(TicketStatus status, LocalDateTime start, Duration duration) {
+        Screening screening = Screening.builder()
+                .startTime(start)
+                .duration(duration)
                 .build();
-
-        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-
-        // when
-        TicketStatus result = ticketValidationService.checkTicket(ticketId);
-
-        // then
-        assertThat(result).isEqualTo(TicketStatus.USED);
-        verify(ticketRepository, never()).save(any());
+        return Ticket.builder()
+                .ticketNumber(ticketId)
+                .status(status)
+                .screening(screening)
+                .ownerEmail("test@example.com")
+                .ownerName("John")
+                .ownerSurname("Doe")
+                .ticketPrice(BigDecimal.TEN)
+                .ticketSeats(List.of())
+                .build();
     }
 
     @Test
     void shouldThrowIfTicketNotFound() {
-        // given
-        UUID ticketId = UUID.randomUUID();
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
-
-        // when / then
-        assertThatThrownBy(() -> ticketValidationService.checkTicket(ticketId))
+        assertThatThrownBy(() -> service.checkTicket(ticketId))
                 .isInstanceOf(TicketNotFoundException.class)
                 .hasMessageContaining("Ticket not found");
     }
 
     @Test
-    void shouldThrowWhenScanningUsedTicket() {
-        // given
-        UUID ticketId = UUID.randomUUID();
-        Ticket ticket = Ticket.builder()
-                .ticketNumber(ticketId)
-                .status(TicketStatus.USED)
-                .screening(mock(Screening.class))
-                .build();
+    void shouldNotChangeStatusIfToBeCalculatedOutsideWindow() {
+        LocalDateTime now = LocalDateTime.of(2025, 5, 25, 12, 0);
+        Clock fixed = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+        when(clock.instant()).thenReturn(fixed.instant());
+        when(clock.getZone()).thenReturn(fixed.getZone());
 
+        // start 20 minutes ahead → outside 15' window
+        Ticket ticket = buildTicket(TicketStatus.TO_BE_CALCULATED, now.plusMinutes(20), Duration.ofMinutes(60));
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        // when / then
-        assertThatThrownBy(() -> ticketValidationService.scanTicket(ticketId))
+        TicketStatus status = service.checkTicket(ticketId);
+
+        assertThat(status).isEqualTo(TicketStatus.TO_BE_CALCULATED);
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldValidateIfToBeCalculatedWithinWindow() {
+        LocalDateTime now = LocalDateTime.of(2025, 5, 25, 12, 0);
+        Clock fixed = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+        when(clock.instant()).thenReturn(fixed.instant());
+        when(clock.getZone()).thenReturn(fixed.getZone());
+
+        // start in 10 minutes → inside 15' window
+        Ticket ticket = buildTicket(TicketStatus.TO_BE_CALCULATED, now.plusMinutes(10), Duration.ofMinutes(60));
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        TicketStatus status = service.checkTicket(ticketId);
+
+        assertThat(status).isEqualTo(TicketStatus.VALID);
+        assertThat(ticket.getStatus()).isEqualTo(TicketStatus.VALID);
+        verify(ticketRepository).save(ticket);
+    }
+
+    @Test
+    void shouldReturnValidForValidTicketBeforeEnd() {
+        LocalDateTime now = LocalDateTime.of(2025, 5, 25, 11, 0);
+        Clock fixed = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+        when(clock.instant()).thenReturn(fixed.instant());
+        when(clock.getZone()).thenReturn(fixed.getZone());
+
+        // start at 10:00, duration 120' → ends at 12:00
+        Ticket ticket = buildTicket(TicketStatus.VALID, now.minusHours(1), Duration.ofMinutes(120));
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+        TicketStatus status = service.checkTicket(ticketId);
+
+        assertThat(status).isEqualTo(TicketStatus.VALID);
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldExpireValidTicketAfterEnd() {
+        LocalDateTime now = LocalDateTime.of(2025, 5, 25, 13, 0);
+        Clock fixed = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+        when(clock.instant()).thenReturn(fixed.instant());
+        when(clock.getZone()).thenReturn(fixed.getZone());
+
+        // start at 10:00, duration 120' → ends at 12:00, now=13:00 → expired
+        Ticket ticket = buildTicket(TicketStatus.VALID, now.minusHours(3), Duration.ofMinutes(120));
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        TicketStatus status = service.checkTicket(ticketId);
+
+        assertThat(status).isEqualTo(TicketStatus.EXPIRED);
+        assertThat(ticket.getStatus()).isEqualTo(TicketStatus.EXPIRED);
+        verify(ticketRepository).save(ticket);
+    }
+
+    @Test
+    void shouldReturnExistingNonValidStatusWithoutSave() {
+        Ticket ticket = buildTicket(TicketStatus.USED, LocalDateTime.now(), Duration.ZERO);
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+        TicketStatus status = service.checkTicket(ticketId);
+
+        assertThat(status).isEqualTo(TicketStatus.USED);
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowWhenScanningNonValid() {
+        Ticket ticket = buildTicket(TicketStatus.EXPIRED, LocalDateTime.now(), Duration.ZERO);
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(() -> service.scanTicket(ticketId))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Cannot scan ticket in status: USED");
+                .hasMessageContaining("Cannot scan ticket in status: EXPIRED");
     }
 
     @Test
-    void shouldReturnSumWhenNoExpiredScreenings() {
+    void shouldScanValidTicketAndReturnProperResponse() {
         // given
-        LocalDateTime now = LocalDateTime.of(2025, 5, 25, 14, 0);
-        Clock fixedClock = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
-        when(clock.instant()).thenReturn(fixedClock.instant());
-        when(clock.getZone()).thenReturn(fixedClock.getZone());
+        LocalDateTime now = LocalDateTime.of(2025, 5, 25, 11, 0);
+        Clock fixed = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+        when(clock.instant()).thenReturn(fixed.instant());
+        when(clock.getZone()).thenReturn(fixed.getZone());
 
-        // 1) stub updateStatusToValid → np. 7
-        when(ticketRepository.updateStatusToValid(
-                eq(TicketStatus.VALID),
-                eq(TicketStatus.TO_BE_CALCULATED),
-                eq(now),
-                eq(now.plusMinutes(15))
-        )).thenReturn(7);
-
-        // 2) screening wystartowany, ale jeszcze nie wygasł
-        Screening s = Screening.builder()
-                .id(42L)
-                .startTime(now.minusMinutes(10))
-                .duration(Duration.ofMinutes(30))
+        // przygotuj powiązane encje
+        Screening screening = Screening.builder()
+                .startTime(now.minusMinutes(30))
+                .duration(Duration.ofMinutes(120))
+                .movie(Movie.builder()
+                        .title("Some Movie")
+                        .build())
                 .build();
-        when(screeningRepository.findStartedScreenings(now))
-                .thenReturn(List.of(s));
 
-        // 3) stub expirePastTicketsByScreening dla pustej listy → 0
-        when(ticketRepository.expirePastTicketsByScreening(List.of()))
-                .thenReturn(0);
+        Seat seat = Seat.builder()
+                .seatNumber(7)
+                .build();
+
+        Ticket ticket = Ticket.builder()
+                .ticketNumber(ticketId)
+                .status(TicketStatus.VALID)
+                .screening(screening)
+                .ownerEmail("user@example.com")
+                .ownerName("Jane")
+                .ownerSurname("Smith")
+                .ticketPrice(BigDecimal.valueOf(30))
+                .build();
+        // ustaw listę miejsc
+        TicketSeat ts = TicketSeat.builder()
+                .seat(seat)
+                .screening(screening)
+                .ticket(ticket)
+                .build();
+        ticket.setTicketSeats(List.of(ts));
+
+        // stuby repo
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.getReferenceById(ticketId)).thenReturn(ticket);
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // when
-        int result = ticketValidationService.updateTicketStatus();
+        TicketResponse response = service.scanTicket(ticketId);
 
         // then
-        assertThat(result).isEqualTo(7); // 7 + 0
-        verify(ticketRepository).updateStatusToValid(
-                TicketStatus.VALID,
-                TicketStatus.TO_BE_CALCULATED,
-                now,
-                now.plusMinutes(15)
-        );
-        // teraz zawsze wywołujemy expirePastTicketsByScreening nawet dla pustej listy
-        verify(ticketRepository).expirePastTicketsByScreening(List.of());
-    }
+        assertThat(response.ticketId()).isEqualTo(ticketId);
+        assertThat(response.status()).isEqualTo(TicketStatus.USED);
+        assertThat(response.movieTitle()).isEqualTo("Some Movie");
+        assertThat(response.screeningStartTime()).isEqualTo(screening.getStartTime());
+        assertThat(response.seatNumbers()).containsExactly(7);
+        assertThat(response.email()).isEqualTo("user@example.com");
+        assertThat(response.ticketOwner()).isEqualTo("Jane Smith");
+        assertThat(response.price()).isEqualByComparingTo(BigDecimal.valueOf(30));
 
-    @Test
-    void shouldReturnSumWhenThereAreExpiredScreenings() {
-        // given
-        LocalDateTime now = LocalDateTime.of(2025, 5, 25, 16, 0);
-        Clock fixedClock = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
-        when(clock.instant()).thenReturn(fixedClock.instant());
-        when(clock.getZone()).thenReturn(fixedClock.getZone());
-
-        // 1) stub updateStatusToValid → np. 2
-        when(ticketRepository.updateStatusToValid(
-                any(), any(), any(), any()
-        )).thenReturn(2);
-
-        // 2) jeden seans już zakończony
-        Screening expired = Screening.builder()
-                .id(99L)
-                .startTime(now.minusHours(2))
-                .duration(Duration.ofMinutes(60))
-                .build();
-        when(screeningRepository.findStartedScreenings(now))
-                .thenReturn(List.of(expired));
-
-        // 3) stub expirePastTicketsByScreening dla [99] → 5
-        when(ticketRepository.expirePastTicketsByScreening(List.of(99L)))
-                .thenReturn(5);
-
-        // when
-        int result = ticketValidationService.updateTicketStatus();
-
-        // then
-        assertThat(result).isEqualTo(7); // 2 + 5
-        verify(ticketRepository).updateStatusToValid(
-                TicketStatus.VALID,
-                TicketStatus.TO_BE_CALCULATED,
-                now,
-                now.plusMinutes(15)
-        );
-        verify(ticketRepository).expirePastTicketsByScreening(List.of(99L));
+        // i status encji też się zmienił
+        assertThat(ticket.getStatus()).isEqualTo(TicketStatus.USED);
+        verify(ticketRepository).save(ticket);
     }
 }
