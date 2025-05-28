@@ -411,39 +411,23 @@ components:
             $ref: "#/components/schemas/ScreeningSummaryDto"
     ScreeningSummaryDto:
       type: object
+      description: Podsumowanie informacji o seansie
       properties:
         id:
           type: integer
           format: int64
+          description: Unikalny identyfikator seansu
+          example: 42
         startTime:
           type: string
           format: date-time
+          description: Data i godzina rozpoczęcia seansu
+          example: 2025-05-27T19:30:00
         duration:
-          type: object
-          properties:
-            seconds:
-              type: integer
-              format: int64
-            zero:
-              type: boolean
-            nano:
-              type: integer
-              format: int32
-            negative:
-              type: boolean
-            positive:
-              type: boolean
-            units:
-              type: array
-              items:
-                type: object
-                properties:
-                  durationEstimated:
-                    type: boolean
-                  timeBased:
-                    type: boolean
-                  dateBased:
-                    type: boolean
+          type: integer
+          format: int64
+          description: Czas trwania seansu w minutach
+          example: 120
     MovieSimpleDto:
       type: object
       description: Podstawowe informacje o filmie
@@ -489,32 +473,10 @@ components:
           description: Czas rozpoczęcia
           example: 2025-05-23T20:00:00
         duration:
-          type: object
+          type: integer
+          format: int64
           description: Czas trwania
-          properties:
-            seconds:
-              type: integer
-              format: int64
-            zero:
-              type: boolean
-            nano:
-              type: integer
-              format: int32
-            negative:
-              type: boolean
-            positive:
-              type: boolean
-            units:
-              type: array
-              items:
-                type: object
-                properties:
-                  durationEstimated:
-                    type: boolean
-                  timeBased:
-                    type: boolean
-                  dateBased:
-                    type: boolean
+          example: 120
         seats:
           type: array
           description: Lista dostępnych miejsc

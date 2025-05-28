@@ -72,11 +72,7 @@ public class RepertoireServiceImpl implements RepertoireService {
                         m.getTitle(),
                         m.getDescription(),
                         m.getScreenings().stream()
-                                .map(s -> new ScreeningSummaryDto(
-                                        s.getId(),
-                                        s.getStartTime(),
-                                        s.getDuration().toMinutes()
-                                ))
+                                .map(this::createScreeningDto)
                                 .toList()
                 ))
                 .toList();
@@ -92,5 +88,13 @@ public class RepertoireServiceImpl implements RepertoireService {
                         !taken.contains(seat.getId())
                 ))
                 .toList();
+    }
+
+    private ScreeningSummaryDto createScreeningDto(Screening screening) {
+        return ScreeningSummaryDto.builder()
+                .id(screening.getId())
+                .startTime(screening.getStartTime())
+                .duration(screening.getDuration().toMinutes())
+                .build();
     }
 }
