@@ -71,7 +71,6 @@ public class RepertoireServiceImpl implements RepertoireService {
                         m.getId(),
                         m.getTitle(),
                         m.getDescription(),
-                        m.getImage(),
                         m.getScreenings().stream()
                                 .map(this::createScreeningDto)
                                 .toList()
