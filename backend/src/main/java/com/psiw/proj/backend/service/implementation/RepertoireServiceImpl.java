@@ -60,7 +60,7 @@ public class RepertoireServiceImpl implements RepertoireService {
                 new MovieSimpleDto(s.getMovie().getId(), s.getMovie().getTitle()),
                 new RoomDto(s.getRoom().getRoomNumber(), s.getRoom().getRowCount(), s.getRoom().getColumnCount()),
                 s.getStartTime(),
-                s.getDuration(),
+                s.getDuration().toMinutes(),
                 getSeatDtos(seatList, taken)
         );
     }
@@ -71,12 +71,11 @@ public class RepertoireServiceImpl implements RepertoireService {
                         m.getId(),
                         m.getTitle(),
                         m.getDescription(),
-                        m.getImage(),
                         m.getScreenings().stream()
                                 .map(s -> new ScreeningSummaryDto(
                                         s.getId(),
                                         s.getStartTime(),
-                                        s.getDuration()
+                                        s.getDuration().toMinutes()
                                 ))
                                 .toList()
                 ))

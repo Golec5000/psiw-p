@@ -7,26 +7,26 @@ info:
     url: http://springdoc.org
   version: "1.0"
 servers:
-- url: http://localhost:8081
-  description: Generated server url
+  - url: http://localhost:8081
+    description: Generated server url
 paths:
   /psiw/api/v1/auth/ticket-validation/scan:
     put:
       tags:
-      - ticket-validation-controller
+        - ticket-validation-controller
       summary: Skanuje bilet
       description: "Skanuje bilet podczas wejścia, oznaczając go jako użyty i zwracają\
         c szczegóły biletu"
       operationId: scanTicket
       parameters:
-      - name: ticketId
-        in: query
-        description: ID biletu do zeskanowania
-        required: true
-        schema:
-          type: string
-          format: uuid
-        example: 123e4567-e89b-12d3-a456-426614174000
+        - name: ticketId
+          in: query
+          description: ID biletu do zeskanowania
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
       responses:
         "200":
           description: Bilet zeskanowany pomyślnie
@@ -39,7 +39,7 @@ paths:
   /psiw/api/v1/open/reservations/confirm:
     post:
       tags:
-      - reservation-controller
+        - reservation-controller
       summary: Potwierdzenie rezerwacji miejsc
       description: "Umożliwia użytkownikowi potwierdzenie rezerwacji miejsc na konkretny\
         \ seans, generując bilet z unikalnym identyfikatorem."
@@ -62,7 +62,7 @@ paths:
   /psiw/api/v1/open/payment:
     post:
       tags:
-      - payment-controller
+        - payment-controller
       summary: Przetwarza płatność
       description: Endpoint do symulacji przetwarzania płatności. Co piąte żądanie
         kończy się błędem 503 (symulacja awarii).
@@ -89,17 +89,17 @@ paths:
   /psiw/api/v1/auth/refresh:
     post:
       tags:
-      - login-controller
+        - login-controller
       summary: Refresh JWT tokens
       description: Na podstawie ważnego refresh tokena zwraca nową parę access+refresh
         tokenów.
       operationId: refresh
       parameters:
-      - name: Authorization
-        in: header
-        required: true
-        schema:
-          type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: Tokens refreshed
@@ -116,7 +116,7 @@ paths:
   /psiw/api/v1/auth/login:
     post:
       tags:
-      - login-controller
+        - login-controller
       summary: Logowanie użytkownika
       description: Umożliwia zalogowanie użytkownika na podstawie danych uwierzytelniających
         przekazanych przez Spring Security. Zwraca token JWT po poprawnej autoryzacji.
@@ -135,18 +135,18 @@ paths:
   /psiw/api/v1/open/repertoire/movies:
     get:
       tags:
-      - repertoire-controller
+        - repertoire-controller
       summary: Pobiera filmy z repertuaru na dany dzień
       description: Zwraca listę filmów wraz z zaplanowanymi seansami dla konkretnej
         daty.
       operationId: getMoviesForSpecificDate
       parameters:
-      - name: date
-        in: query
-        required: true
-        schema:
-          type: string
-          format: date
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
       responses:
         "200":
           description: Lista filmów pobrana pomyślnie
@@ -157,18 +157,18 @@ paths:
   /psiw/api/v1/open/repertoire/movie-screening:
     get:
       tags:
-      - repertoire-controller
+        - repertoire-controller
       summary: Pobiera szczegóły konkretnego seansu
       description: Zwraca szczegółowe informacje na temat seansu na podstawie jego
         ID.
       operationId: getScreeningDetails
       parameters:
-      - name: screeningId
-        in: query
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: screeningId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: Szczegóły seansu zwrócone pomyślnie
@@ -179,20 +179,20 @@ paths:
   /psiw/api/v1/open/movies/{id}/image:
     get:
       tags:
-      - movie-image-controller
+        - movie-image-controller
       summary: Pobierz obraz filmu
       description: "Zwraca surowe bajty obrazu powiązanego z podanym ID filmu. Typ\
         \ zawartości odpowiedzi jest określany dynamicznie (np. image/jpeg, image/png)."
       operationId: getMovieImage
       parameters:
-      - name: id
-        in: path
-        description: Unikalny identyfikator filmu
-        required: true
-        schema:
-          type: integer
-          format: int64
-        example: 42
+        - name: id
+          in: path
+          description: Unikalny identyfikator filmu
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 42
       responses:
         "200":
           description: Obraz został pomyślnie pobrany
@@ -218,20 +218,20 @@ paths:
   /psiw/api/v1/auth/ticket-validation/check-staus:
     get:
       tags:
-      - ticket-validation-controller
+        - ticket-validation-controller
       summary: Sprawdza status biletu
       description: "Zwraca status biletu (VALID, USED, EXPIRED, INVALID) na podstawie\
         \ jego ID"
       operationId: checkStaus
       parameters:
-      - name: ticketId
-        in: query
-        description: ID biletu do sprawdzenia
-        required: true
-        schema:
-          type: string
-          format: uuid
-        example: 123e4567-e89b-12d3-a456-426614174000
+        - name: ticketId
+          in: query
+          description: ID biletu do sprawdzenia
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
       responses:
         "200":
           description: Status biletu
@@ -241,10 +241,10 @@ paths:
                 type: string
                 description: Status biletu
                 enum:
-                - VALID
-                - USED
-                - EXPIRED
-                - TO_BE_CALCULATED
+                  - VALID
+                  - USED
+                  - EXPIRED
+                  - TO_BE_CALCULATED
         "400":
           description: Nieprawidłowy identyfikator biletu
 components:
@@ -257,8 +257,8 @@ components:
           type: array
           description: Numery miejsc
           example:
-          - 12
-          - 13
+            - 12
+            - 13
           items:
             type: integer
             format: int32
@@ -280,10 +280,10 @@ components:
           type: string
           description: Status biletu
           enum:
-          - VALID
-          - USED
-          - EXPIRED
-          - TO_BE_CALCULATED
+            - VALID
+            - USED
+            - EXPIRED
+            - TO_BE_CALCULATED
           example: CONFIRMED
         email:
           type: string
@@ -310,9 +310,9 @@ components:
           type: array
           description: Lista identyfikatorów miejsc do rezerwacji
           example:
-          - 1
-          - 2
-          - 3
+            - 1
+            - 2
+            - 3
           items:
             type: integer
             format: int64
@@ -329,11 +329,11 @@ components:
           description: Nazwisko osoby rezerwującej
           example: Doe
       required:
-      - email
-      - name
-      - screeningId
-      - seatIds
-      - surname
+        - email
+        - name
+        - screeningId
+        - seatIds
+        - surname
     PaymentRequest:
       type: object
       description: Dane wymagane do przetworzenia płatności
@@ -380,8 +380,8 @@ components:
           type: string
           description: Typ tokenu dostępowego
           enum:
-          - Bearer
-          - Refresh
+            - Bearer
+            - Refresh
           example: Bearer
     MovieResponse:
       type: object
@@ -461,8 +461,7 @@ components:
       type: object
       properties:
         roomNumber:
-          type: integer
-          format: int64
+          type: string
         rowCount:
           type: integer
           format: int32

@@ -1,0 +1,64 @@
+<div class="p-6">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">🎬 Repertuar kinowy</h1>
+
+  <div class="mb-8">
+    <label class="font-semibold mr-2 text-gray-700">Wybierz datę:</label>
+    <input
+      type="date"
+      [(ngModel)]="selectedDate"
+      (change)="onDateChange()"
+      class="border border-gray-300 rounded px-3 py-2 focus:ring focus:ring-indigo-200"
+    />
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full table-fixed text-sm">
+      <thead>
+        <tr>
+          <th
+            class="text-left px-4 py-2 w-1/4 text-gray-500 uppercase text-xs tracking-wide"
+          >
+            Film
+          </th>
+          <th
+            class="text-left px-4 py-2 text-gray-500 uppercase text-xs tracking-wide"
+          >
+            Seanse (09:00–22:00)
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let movie of movies" class="hover:bg-gray-50 transition">
+          <td class="px-4 py-4 align-top">
+            <a
+              [routerLink]="['/film', movie.id]"
+              class="text-lg font-semibold text-gray-800 hover:text-gray-600 hover:underline transition"
+            >
+              {{ movie.title }}
+            </a>
+          </td>
+          <td class="px-4 py-4 relative h-10">
+            <div
+              class="relative h-10 w-full bg-gray-100 rounded overflow-hidden"
+            >
+              <ng-container *ngFor="let screening of movie.screenings">
+                <a
+                  [routerLink]="['/rezerwacja', screening.id]"
+                  [class.bg-gray-400]="isPastScreening(screening.startTime)"
+                  [class.pointer-events-none]="
+                    isPastScreening(screening.startTime)
+                  "
+                  [class.bg-green-600]="!isPastScreening(screening.startTime)"
+                  [class.text-white]="!isPastScreening(screening.startTime)"
+                  class="absolute top-1/2 -translate-y-1/2 px-3 py-1 text-xs rounded-full font-medium shadow hover:opacity-90 transition whitespace-nowrap"
+                >
+                  {{ formatTime(screening.startTime) }}
+                </a>
+              </ng-container>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
