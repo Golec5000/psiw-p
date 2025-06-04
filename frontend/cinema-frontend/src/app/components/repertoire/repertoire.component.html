@@ -32,12 +32,12 @@
       <tbody>
         <tr *ngFor="let movie of movies" class="border-t">
           <td class="px-4 py-4 align-top">
-            <a
-              [routerLink]="['/film', movie.id]"
-              class="text-base font-semibold text-gray-800 hover:text-indigo-600 hover:underline transition"
+            <button
+              (click)="openMovieDetails(movie)"
+              class="text-base font-semibold text-indigo-700 hover:underline transition cursor-pointer bg-transparent border-0 p-0"
             >
               {{ movie.title }}
-            </a>
+            </button>
           </td>
 
           <ng-container *ngFor="let hour of hours">
