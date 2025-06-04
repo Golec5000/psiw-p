@@ -1,0 +1,24 @@
+<div class="flex flex-col min-h-screen">
+  <nav
+    class="flex justify-between items-center bg-gray-800 text-white px-6 py-4 shadow"
+  >
+    <div>
+      <a routerLink="/repertuar" class="font-semibold text-lg hover:underline">
+        🎬 Repertuar
+      </a>
+    </div>
+    <div>
+      <a routerLink="/login" class="text-sm hover:underline">
+        Logowanie pracownika
+      </a>
+    </div>
+  </nav>
+
+  <main class="flex-grow px-6 py-4 bg-gray-50">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="bg-gray-800 text-white text-center py-4 text-sm">
+    &copy; {{ currentYear }} Cinema. Wszystkie prawa zastrzeżone.
+  </footer>
+</div>
