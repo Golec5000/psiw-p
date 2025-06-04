@@ -4,6 +4,7 @@ import { MovieResponse } from '../../models/movieResponse';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ScreeningSummaryDto } from '../../models/screeningSummaryDto';
 
 @Component({
   selector: 'app-repertoire',
@@ -14,6 +15,7 @@ import { CommonModule } from '@angular/common';
 export class RepertoireComponent {
   selectedDate: string = new Date().toISOString().split('T')[0];
   movies: MovieResponse[] = [];
+  readonly hours = Array.from({ length: 13 }, (_, i) => i + 10);
 
   constructor(private movieService: MovieService) {
     this.fetchMovies();
@@ -31,13 +33,30 @@ export class RepertoireComponent {
   }
 
   isPastScreening(screeningTime: string): boolean {
-    const [hour, minute] = screeningTime.split(':').map(Number);
-    const date = new Date(this.selectedDate);
-    date.setHours(hour, minute, 0, 0);
-    return date < new Date();
+    const screeningDate = new Date(screeningTime);
+    return screeningDate.getTime() < new Date().getTime();
   }
 
-  formatTime(startTime: string): string {
-    return startTime.slice(-5);
+  formatTime(dateStr: string): string {
+    return new Date(dateStr).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  groupScreeningsByHour(
+    screenings: ScreeningSummaryDto[]
+  ): Record<number, ScreeningSummaryDto[]> {
+    const grouped: Record<number, ScreeningSummaryDto[]> = {};
+
+    for (const screening of screenings) {
+      const hour = new Date(screening.startTime).getHours();
+      if (!grouped[hour]) {
+        grouped[hour] = [];
+      }
+      grouped[hour].push(screening);
+    }
+
+    return grouped;
   }
 }

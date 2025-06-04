@@ -12,51 +12,65 @@
   </div>
 
   <div class="overflow-x-auto">
-    <table class="min-w-full table-fixed text-sm">
+    <table class="min-w-full text-sm">
       <thead>
         <tr>
           <th
-            class="text-left px-4 py-2 w-1/4 text-gray-500 uppercase text-xs tracking-wide"
+            class="text-left px-4 py-2 w-1/5 text-gray-500 uppercase text-xs tracking-wide"
           >
             Film
           </th>
-          <th
-            class="text-left px-4 py-2 text-gray-500 uppercase text-xs tracking-wide"
-          >
-            Seanse (09:00–22:00)
-          </th>
+          <ng-container *ngFor="let hour of hours">
+            <th
+              class="text-center px-2 py-2 text-gray-500 uppercase text-xs tracking-wide"
+            >
+              {{ hour }}:00
+            </th>
+          </ng-container>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let movie of movies" class="hover:bg-gray-50 transition">
+        <tr *ngFor="let movie of movies" class="border-t">
           <td class="px-4 py-4 align-top">
             <a
               [routerLink]="['/film', movie.id]"
-              class="text-lg font-semibold text-gray-800 hover:text-gray-600 hover:underline transition"
+              class="text-base font-semibold text-gray-800 hover:text-indigo-600 hover:underline transition"
             >
               {{ movie.title }}
             </a>
           </td>
-          <td class="px-4 py-4 relative h-10">
-            <div
-              class="relative h-10 w-full bg-gray-100 rounded overflow-hidden"
-            >
-              <ng-container *ngFor="let screening of movie.screenings">
-                <a
-                  [routerLink]="['/rezerwacja', screening.id]"
-                  [class.bg-gray-400]="isPastScreening(screening.startTime)"
-                  [class.pointer-events-none]="
-                    isPastScreening(screening.startTime)
+
+          <ng-container *ngFor="let hour of hours">
+            <td class="align-top px-2 py-4">
+              <div class="flex flex-col gap-1">
+                <ng-container
+                  *ngFor="
+                    let screening of groupScreeningsByHour(movie.screenings)[
+                      hour
+                    ] || []
                   "
-                  [class.bg-green-600]="!isPastScreening(screening.startTime)"
-                  [class.text-white]="!isPastScreening(screening.startTime)"
-                  class="absolute top-1/2 -translate-y-1/2 px-3 py-1 text-xs rounded-full font-medium shadow hover:opacity-90 transition whitespace-nowrap"
                 >
-                  {{ formatTime(screening.startTime) }}
-                </a>
-              </ng-container>
-            </div>
-          </td>
+                  <ng-container
+                    *ngIf="isPastScreening(screening.startTime); else active"
+                  >
+                    <span
+                      class="px-3 py-1 text-xs rounded-full font-medium bg-gray-400 text-gray-700 pointer-events-none shadow whitespace-nowrap"
+                    >
+                      {{ formatTime(screening.startTime) }}
+                    </span>
+                  </ng-container>
+                  <ng-template #active>
+                    <a
+                      [routerLink]="['/rezerwacja', screening.id]"
+                      class="px-3 py-1 text-xs rounded-full font-medium bg-emerald-600 text-white hover:bg-emerald-700 shadow transition whitespace-nowrap"
+                    >
+                      {{ formatTime(screening.startTime) }}
+                    </a>
+                  </ng-template>
+                </ng-container>
+              </div>
+            </td>
+          </ng-container>
         </tr>
       </tbody>
     </table>

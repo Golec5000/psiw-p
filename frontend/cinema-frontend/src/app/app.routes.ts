@@ -1,11 +1,22 @@
 import { Routes } from '@angular/router';
-import { RepertoireComponent } from './components/repertoire/repertoire.component';
+import { MainLayoutComponent } from './components/shared/main-layout/main-layout.component';
 
 export const routes: Routes = [
+  { path: '', redirectTo: '/repertoire', pathMatch: 'full' },
+
   {
     path: '',
-    pathMatch: 'full',
-    redirectTo: '/repertoire',
+    component: MainLayoutComponent,
+    children: [
+      {
+        path: 'repertoire',
+        loadComponent: () =>
+          import('./components/repertoire/repertoire.component').then(
+            (m) => m.RepertoireComponent
+          ),
+      },
+    ],
   },
-  { path: 'repertoire', component: RepertoireComponent },
+
+  { path: '**', redirectTo: '/repertoire' },
 ];
