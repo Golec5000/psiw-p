@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -35,10 +36,10 @@ public class DBInit {
     public void init() {
         if (roomRepository.count() > 0) {
             log.info("Database already initialized, skipping...");
-            return; // avoid duplicates
+            return;
         }
 
-        // 1. Create rooms with different sizes
+        // 1. Create rooms
         List<Room> rooms = roomRepository.saveAll(List.of(
                 Room.builder().roomNumber("A1").rowCount(5).columnCount(5).build(),
                 Room.builder().roomNumber("A2").rowCount(8).columnCount(10).build(),
@@ -46,10 +47,9 @@ public class DBInit {
                 Room.builder().roomNumber("B2").rowCount(10).columnCount(12).build(),
                 Room.builder().roomNumber("C1").rowCount(4).columnCount(6).build()
         ));
+        log.info("Rooms created: {}", rooms.size());
 
-        log.info("Rooms found: {}", rooms.size());
-
-        // 2. Generate all seats for each room
+        // 2. Generate seats
         List<Seat> allSeats = rooms.stream()
                 .flatMap(room -> IntStream.rangeClosed(1, room.getRowCount())
                         .boxed()
@@ -57,13 +57,13 @@ public class DBInit {
                                 .mapToObj(col -> Seat.builder()
                                         .rowNumber(row)
                                         .columnNumber(col)
-                                        .seatNumber((row - 1) * room.getColumnCount() + col) // sequential seat number
+                                        .seatNumber((row - 1) * room.getColumnCount() + col)
                                         .seatPrice(DEFAULT_SEAT_PRICE)
                                         .room(room)
                                         .build())))
                 .toList();
-        log.info("Seats found: {}", allSeats.size());
         seatRepository.saveAll(allSeats);
+        log.info("Seats created: {}", allSeats.size());
 
         // 3. Create sample movies
         List<Movie> movies = movieRepository.saveAll(List.of(
@@ -132,64 +132,61 @@ public class DBInit {
 
                 Movie.builder()
                         .title("Parasite")
-                        .description("When the impoverished Kim family cons their way into the lives of the wealthy " +
-                                "Parks, they taste the comforts and privileges of a world far removed from their own. " +
-                                "But as alliances shift and secrets surface, a darkly comedic chain of events spirals " +
-                                "into violence and tragedy. Bong Joon-ho’s Oscar®-winning tour de force skewers class " +
-                                "disparity with razor-sharp wit, unpredictable twists, and unforgettable imagery."
+                        .description(
+                                "When the impoverished Kim family cons their way into the lives of the wealthy " +
+                                        "Parks, they taste the comforts and privileges of a world far removed from their own. " +
+                                        "But as alliances shift and secrets surface, a darkly comedic chain of events spirals " +
+                                        "into violence and tragedy. Bong Joon-ho’s Oscar®-winning tour de force skewers class " +
+                                        "disparity with razor-sharp wit, unpredictable twists, and unforgettable imagery."
                         )
                         .image("parasite.jpg")
                         .build()
         ));
+        log.info("Movies created: {}", movies.size());
 
-
-        log.info("Movies found: {}", movies.size());
-
-        // 4. Generate screenings for next 3 days, two per movie per day, rotating rooms
+        // 4. Generate screenings for 8 days × 5 time slots × all movies
         List<Screening> screenings = new ArrayList<>();
-        LocalDate startDate = LocalDate.now().plusDays(1);
+        LocalDate startDate = LocalDate.now();
+        List<Integer> startHours = List.of(9, 12, 15, 18, 21);
+        Random random = new Random();
         AtomicInteger roomIndex = new AtomicInteger();
 
-        movies.forEach(movie -> {
-            for (int day = 0; day < 3; day++) {
-                for (int slot = 0; slot < 2; slot++) {
+        for (Movie movie : movies) {
+            for (int dayOffset = 0; dayOffset <= 7; dayOffset++) {
+                for (Integer hour : startHours) {
                     Room room = rooms.get(roomIndex.getAndIncrement() % rooms.size());
-                    LocalDateTime startTime = startDate.plusDays(day)
-                            .atTime(12 + slot * 3, 0);
+                    LocalDateTime startTime = startDate.plusDays(dayOffset).atTime(hour, 0);
+                    Duration duration = Duration.ofMinutes(100 + random.nextInt(41)); // 100–140 min
 
                     screenings.add(Screening.builder()
                             .movie(movie)
                             .room(room)
                             .startTime(startTime)
-                            .duration(Duration.ofMinutes(120 + slot * 10L))
+                            .duration(duration)
                             .build());
-                    log.info("Screening created: {} in room {} at {}", movie.getTitle(), room.getRoomNumber(), startTime);
+
+                    log.info("Screening: {} in room {} at {} for {}min",
+                            movie.getTitle(), room.getRoomNumber(), startTime, duration.toMinutes());
                 }
             }
-        });
-        log.info("Screenings found: {}", screenings.size());
+        }
         screeningRepository.saveAll(screenings);
+        log.info("Screenings created: {}", screenings.size());
 
-        log.info("✅ Database initialized with:");
-        log.info("- {} rooms", rooms.size());
-        log.info("- {} seats", allSeats.size());
-        log.info("- {} movies", movies.size());
-        log.info("- {} screenings", screenings.size());
-
-        // 5. Create a default admin user
+        // 5. Create admin users
         for (int i = 0; i < 5; i++) {
             String username = "admin" + i;
             String password = bCryptPasswordEncoder.encode("admin" + i);
-            String fullName = "Admin User " + i;
-
-            TicketClerk ticketClerk = TicketClerk.builder()
+            TicketClerk clerk = TicketClerk.builder()
                     .username(username)
                     .password(password)
-                    .fullName(fullName)
+                    .fullName("Admin User " + i)
                     .build();
-
-            ticketClerkRepository.save(ticketClerk);
+            ticketClerkRepository.save(clerk);
             log.info("Admin user created: {}", username);
         }
+
+        log.info("✅ Initialization complete: {} rooms, {} seats, {} movies, {} screenings",
+                rooms.size(), allSeats.size(), movies.size(), screenings.size());
     }
 }
