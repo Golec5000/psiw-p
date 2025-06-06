@@ -15,6 +15,13 @@ export const routes: Routes = [
             (m) => m.RepertoireComponent
           ),
       },
+      {
+        path: 'reservation/:id',
+        loadComponent: () =>
+          import('./components/seat-selection/seat-selection.component').then(
+            (m) => m.SeatSelectionComponent
+          ),
+      },
     ],
   },
 

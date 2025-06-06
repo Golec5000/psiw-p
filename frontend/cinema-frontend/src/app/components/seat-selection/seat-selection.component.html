@@ -1,0 +1,58 @@
+<div *ngIf="screeningDetails">
+  <div class="mb-6 text-gray-700">
+    <p><strong>Film:</strong> {{ screeningDetails.movie.title }}</p>
+    <p><strong>Sala:</strong> {{ screeningDetails.room.roomNumber }}</p>
+    <p>
+      <strong>Godzina:</strong>
+      {{ screeningDetails.startTime | date : "shortTime" }}
+      ({{ screeningDetails.duration }} min)
+    </p>
+  </div>
+
+  <!-- Ekran -->
+  <div
+    class="mx-auto w-3/4 h-10 mb-10 rounded-b-3xl shadow-lg bg-gradient-to-b from-gray-300 to-gray-500 text-center text-gray-800 font-medium flex items-center justify-center"
+  >
+    🎬 EKRAN
+  </div>
+
+  <div
+    class="mx-auto w-3/4 grid gap-2"
+    [ngStyle]="{
+      'grid-template-rows':
+        'repeat(' + screeningDetails.room.rowCount + ', auto)',
+      'grid-template-columns':
+        'repeat(' + screeningDetails.room.columnCount + ', 1fr)'
+    }"
+  >
+    <ng-container
+      *ngFor="
+        let row of [].constructor(screeningDetails.room.rowCount);
+        let rowIndex = index
+      "
+    >
+      <ng-container *ngFor="let seat of getSeatsForRow(rowIndex + 1)">
+        <div
+          (click)="toggleSeat(seat)"
+          [class.bg-gray-400]="!seat.available"
+          [class.bg-emerald-600]="seat.available && isSelected(seat)"
+          [class.bg-white]="seat.available && !isSelected(seat)"
+          class="border rounded text-center p-2 text-sm cursor-pointer transition shadow-sm"
+          [class.cursor-not-allowed]="!seat.available"
+        >
+          {{ seat.seatNumber }}
+        </div>
+      </ng-container>
+    </ng-container>
+  </div>
+
+  <div class="mt-6 text-center">
+    <button
+      class="bg-indigo-700 text-white px-6 py-3 rounded hover:bg-indigo-800 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+      [disabled]="selectedSeats.length === 0"
+      (click)="openReservationDialog()"
+    >
+      Zarezerwuj ({{ selectedSeats.length }} miejsc)
+    </button>
+  </div>
+</div>

@@ -1,0 +1,108 @@
+<div class="p-6 text-center">
+  <h2 class="text-2xl font-semibold mb-6 text-gray-800">Rezerwacja miejsc</h2>
+
+  <div *ngIf="!result; else summary">
+    <form
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      class="space-y-4 max-w-md mx-auto text-left"
+      novalidate
+    >
+      <!-- Imię -->
+      <div>
+        <input
+          type="text"
+          formControlName="name"
+          placeholder="Imię"
+          class="w-full border border-gray-300 rounded px-3 py-2"
+        />
+        <div
+          *ngIf="form.controls['name'].touched && form.controls['name'].invalid"
+          class="text-red-500 text-sm mt-1"
+        >
+          Imię jest wymagane.
+        </div>
+      </div>
+
+      <!-- Nazwisko -->
+      <div>
+        <input
+          type="text"
+          formControlName="surname"
+          placeholder="Nazwisko"
+          class="w-full border border-gray-300 rounded px-3 py-2"
+        />
+        <div
+          *ngIf="
+            form.controls['surname'].touched && form.controls['surname'].invalid
+          "
+          class="text-red-500 text-sm mt-1"
+        >
+          Nazwisko jest wymagane.
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="Email"
+          class="w-full border border-gray-300 rounded px-3 py-2"
+        />
+        <div
+          *ngIf="form.controls['email'].touched && form.controls['email'].errors?.['required']"
+          class="text-red-500 text-sm mt-1"
+        >
+          Email jest wymagany.
+        </div>
+        <div
+          *ngIf="form.controls['email'].touched && form.controls['email'].errors?.['email']"
+          class="text-red-500 text-sm mt-1"
+        >
+          Wprowadź poprawny adres email.
+        </div>
+      </div>
+
+      <!-- Błąd ogólny -->
+      <div *ngIf="error" class="text-red-500 text-sm">{{ error }}</div>
+
+      <!-- Przycisk -->
+      <button
+        type="submit"
+        [disabled]="form.invalid || loading"
+        class="w-full bg-indigo-700 text-white py-2 rounded hover:bg-indigo-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Zatwierdź
+      </button>
+    </form>
+  </div>
+
+  <!-- Podsumowanie -->
+  <ng-template #summary>
+    <div class="space-y-2 text-sm text-gray-700 max-w-md mx-auto text-left">
+      <p><strong>Kod biletu:</strong> {{ result?.ticketId }}</p>
+      <p><strong>Film:</strong> {{ result?.movieTitle }}</p>
+      <p>
+        <strong>Godzina rozpoczęcia:</strong>
+        {{ result?.screeningStartTime | date : "dd-MM-yyyy HH:mm" }}
+      </p>
+      <p *ngIf="result && result.seatNumbers">
+        <strong>Zarezerwowane miejsca:</strong>
+        {{ result.seatNumbers.join(", ") }}
+      </p>
+      <p><strong>Imię i nazwisko:</strong> {{ result?.ticketOwner }}</p>
+      <p><strong>Email:</strong> {{ result?.email }}</p>
+      <p><strong>Łączny koszt:</strong> {{ result?.price }} zł</p>
+
+      <div class="text-center mt-6">
+        <button
+          (click)="close()"
+          class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
+        >
+          Zamknij
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</div>
