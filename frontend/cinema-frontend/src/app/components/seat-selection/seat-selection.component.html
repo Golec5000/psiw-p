@@ -33,12 +33,13 @@
     >
       <ng-container *ngFor="let seat of getSeatsForRow(rowIndex + 1)">
         <div
-          (click)="toggleSeat(seat)"
+          (click)="!isStaff && toggleSeat(seat)"
+          [class.cursor-pointer]="!isStaff && seat.available"
           [class.bg-gray-400]="!seat.available"
           [class.bg-emerald-600]="seat.available && isSelected(seat)"
           [class.bg-white]="seat.available && !isSelected(seat)"
           class="border rounded text-center p-2 text-sm cursor-pointer transition shadow-sm"
-          [class.cursor-not-allowed]="!seat.available"
+          [class.cursor-not-allowed]="!seat.available || isStaff"
         >
           {{ seat.seatNumber }}
         </div>
@@ -46,9 +47,9 @@
     </ng-container>
   </div>
 
-  <div class="mt-6 text-center">
+  <div class="mt-6 text-center" *ngIf="!isStaff">
     <button
-      class="bg-indigo-700 text-white px-6 py-3 rounded hover:bg-indigo-800 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+      class="bg-indigo-700 text-white px-6 py-3 rounded hover:bg-indigo-800 transition shadow-md"
       [disabled]="selectedSeats.length === 0"
       (click)="openReservationDialog()"
     >

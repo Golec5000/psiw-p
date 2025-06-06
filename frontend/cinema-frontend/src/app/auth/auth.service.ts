@@ -71,6 +71,10 @@ export class AuthService {
     return localStorage.getItem('accessToken');
   }
 
+  isStaff(): boolean {
+    return this.hasTokens();
+  }
+
   private hasTokens(): boolean {
     return (
       !!localStorage.getItem('accessToken') &&

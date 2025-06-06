@@ -6,6 +6,7 @@ import { SeatDto } from '../../models/seatDto';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ReservationDialogComponent } from '../reservation-dialog/reservation-dialog.component';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-seat-selection',
@@ -21,10 +22,14 @@ export class SeatSelectionComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private screeningService: ScreeningService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private authService: AuthService
   ) {}
 
+  isStaff = false;
+
   ngOnInit(): void {
+    this.isStaff = this.authService.isStaff();
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.screeningService.getDetails(id).subscribe({
       next: (data) => (this.screeningDetails = data),
