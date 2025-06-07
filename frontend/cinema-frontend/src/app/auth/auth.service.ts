@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, catchError, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
 
 export interface LoginResponse {
@@ -44,18 +44,25 @@ export class AuthService {
     if (!token) throw new Error('No refresh token available');
 
     const headers = new HttpHeaders({
-      Authorization: `Refresh ${token}`,
+      'X-Refresh-Token': token,
     });
+
+    console.log('Sending refresh token:', token);
 
     return this.http
       .post<LoginResponse>(`${this.baseUrl}/refresh`, {}, { headers })
       .pipe(
-        tap((res) => {
-          localStorage.setItem('accessToken', res.accessToken);
-          localStorage.setItem('refreshToken', res.refreshToken);
-        }),
         tap({
-          error: () => this.logout(),
+          next: (res) => {
+            console.log('Token refreshed successfully');
+            localStorage.setItem('accessToken', res.accessToken);
+            this._loggedIn.next(true);
+          },
+        }),
+        catchError((err) => {
+          console.error('Refresh error', err);
+          this.logout();
+          throw err;
         })
       );
   }

@@ -49,11 +49,7 @@ public class LoginController {
     })
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refresh(
-            @RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith(TokenType.Refresh.name() + " ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        String refreshToken = authHeader.substring(TokenType.Refresh.name().length() + 1);
+            @RequestHeader("X-Refresh-Token") String refreshToken) {
         LoginResponse resp = authService.refresh(refreshToken);
         return ResponseEntity.ok(resp);
     }

@@ -1,0 +1,43 @@
+<div class="max-w-md mx-auto mt-10 p-6 border rounded shadow text-center">
+  <h2 class="text-xl font-semibold text-gray-800 mb-4">
+    Sprawdź ważność biletu
+  </h2>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+    novalidate
+    class="space-y-4 text-left"
+  >
+    <input
+      type="text"
+      formControlName="ticketId"
+      placeholder="Wprowadź kod biletu"
+      class="w-full border border-gray-300 rounded px-3 py-2"
+    />
+    <div
+      *ngIf="
+        form.controls['ticketId'].touched && form.controls['ticketId'].invalid
+      "
+      class="text-red-500 text-sm"
+    >
+      Kod biletu jest wymagany
+    </div>
+
+    <button
+      type="submit"
+      [disabled]="form.invalid"
+      class="w-full bg-indigo-700 text-white py-2 rounded hover:bg-indigo-800 transition disabled:opacity-50"
+    >
+      Sprawdź
+    </button>
+  </form>
+
+  <div *ngIf="status" class="mt-6 text-lg font-medium">
+    Status biletu: {{ status }}
+  </div>
+
+  <div *ngIf="error" class="mt-6 text-red-600 text-sm">
+    {{ error }}
+  </div>
+</div>

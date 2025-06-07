@@ -22,6 +22,13 @@ export const routes: Routes = [
             (m) => m.SeatSelectionComponent
           ),
       },
+      {
+        path: 'check-ticket',
+        loadComponent: () =>
+          import('./components/check-ticket/check-ticket.component').then(
+            (m) => m.CheckTicketComponent
+          ),
+      },
     ],
   },
 

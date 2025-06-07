@@ -22,22 +22,25 @@ export const jwtInterceptor: HttpInterceptorFn = (
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (
-        error.status === 401 &&
-        req.url.includes('/api/') &&
-        !req.url.includes('/login')
-      ) {
+      const isAuthEndpoint =
+        req.url.includes('/auth/login') || req.url.includes('/auth/refresh');
+
+      if (error.status === 401 && !isAuthEndpoint) {
+        console.log('Interceptor calls auth.refresh()');
         return auth.refresh().pipe(
           switchMap(() => {
-            const refreshed = auth.getAccessToken();
+            const newToken = auth.getAccessToken();
+            if (!newToken) return throwError(() => error);
+
             return next(
               req.clone({
-                setHeaders: { Authorization: `Bearer ${refreshed}` },
+                setHeaders: { Authorization: `Bearer ${newToken}` },
               })
             );
           })
         );
       }
+
       return throwError(() => error);
     })
   );
