@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './components/shared/main-layout/main-layout.component';
+import { staffOnlyGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/repertoire', pathMatch: 'full' },
@@ -28,6 +29,7 @@ export const routes: Routes = [
           import('./components/check-ticket/check-ticket.component').then(
             (m) => m.CheckTicketComponent
           ),
+        canActivate: [staffOnlyGuard],
       },
       {
         path: 'scan-ticket',
@@ -35,6 +37,7 @@ export const routes: Routes = [
           import('./components/scan-ticket/scan-ticket.component').then(
             (m) => m.ScanTicketComponent
           ),
+        canActivate: [staffOnlyGuard],
       },
     ],
   },
