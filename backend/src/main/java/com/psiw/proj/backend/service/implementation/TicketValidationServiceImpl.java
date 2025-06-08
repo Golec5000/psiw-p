@@ -6,6 +6,7 @@ import com.psiw.proj.backend.repository.TicketRepository;
 import com.psiw.proj.backend.service.interfaces.TicketValidationService;
 import com.psiw.proj.backend.utils.enums.TicketStatus;
 import com.psiw.proj.backend.utils.responseDto.TicketResponse;
+import jakarta.annotation.Nullable;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class TicketValidationServiceImpl implements TicketValidationService {
 
     @Override
     @Transactional
-    public TicketStatus checkTicket(UUID ticketNumber) {
+    public TicketResponse checkTicket(UUID ticketNumber) {
         Ticket ticket = ticketRepository.findById(ticketNumber)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket not found: " + ticketNumber));
 
@@ -32,35 +33,36 @@ public class TicketValidationServiceImpl implements TicketValidationService {
         LocalDateTime start = ticket.getScreening().getStartTime();
         LocalDateTime end = start.plus(ticket.getScreening().getDuration());
 
-        // 1) TO_BE_CALCULATED → VALID, jeżeli jesteśmy w oknie 15 min przed seansem
-        if (ticket.getStatus() == TicketStatus.TO_BE_CALCULATED) {
-            if (!now.isBefore(start.minusMinutes(15)) && now.isBefore(start)) {
+        // WAITING_FOR_ACTIVATION
+        if (ticket.getStatus() == TicketStatus.WAITING_FOR_ACTIVATION) {
+            // ticket becomes active 15 minutes before the film starts
+            if (!now.isBefore(start.minusMinutes(15)) && now.isBefore(end)) {
                 ticket.setStatus(TicketStatus.VALID);
                 ticketRepository.save(ticket);
-                return TicketStatus.VALID;
+                return mapToTicketResponse(ticket, null);
             }
-            return TicketStatus.TO_BE_CALCULATED;
+            return mapToTicketResponse(ticket, null);
         }
 
-        // 2) VALID → EXPIRED, jeżeli seans się skończył
+        // VALID
         if (ticket.getStatus() == TicketStatus.VALID) {
             if (now.isAfter(end) || now.isEqual(end)) {
                 ticket.setStatus(TicketStatus.EXPIRED);
                 ticketRepository.save(ticket);
-                return TicketStatus.EXPIRED;
+                return mapToTicketResponse(ticket, null);
             }
-            return TicketStatus.VALID;
+            return mapToTicketResponse(ticket, null);
         }
 
         // 3) pozostałe statusy (USED, EXPIRED itd.) zwracamy bez zmian
-        return ticket.getStatus();
+        return mapToTicketResponse(ticket, null);
     }
 
     @Override
     @Transactional
     public TicketResponse scanTicket(UUID ticketNumber) {
         // najpierw uaktualniamy status
-        TicketStatus current = checkTicket(ticketNumber);
+        TicketStatus current = checkTicket(ticketNumber).status();
 
         if (current != TicketStatus.VALID) {
             throw new IllegalStateException("Cannot scan ticket in status: " + current);
@@ -71,10 +73,10 @@ public class TicketValidationServiceImpl implements TicketValidationService {
         ticket.setStatus(TicketStatus.USED);
         Ticket updated = ticketRepository.save(ticket);
 
-        return mapToTicketResponse(updated);
+        return mapToTicketResponse(updated, null);
     }
 
-    private TicketResponse mapToTicketResponse(Ticket ticket) {
+    private TicketResponse mapToTicketResponse(Ticket ticket, @Nullable TicketStatus status) {
         List<Integer> seats = ticket.getTicketSeats().stream()
                 .map(ts -> ts.getSeat().getSeatNumber())
                 .toList();
@@ -84,7 +86,7 @@ public class TicketValidationServiceImpl implements TicketValidationService {
                 .seatNumbers(seats)
                 .movieTitle(ticket.getScreening().getMovie().getTitle())
                 .screeningStartTime(ticket.getScreening().getStartTime())
-                .status(ticket.getStatus())
+                .status(status == null ? ticket.getStatus() : status)
                 .email(ticket.getOwnerEmail())
                 .ticketOwner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
                 .price(ticket.getTicketPrice())

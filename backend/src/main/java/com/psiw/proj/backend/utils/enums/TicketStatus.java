@@ -13,6 +13,6 @@ public enum TicketStatus {
     @Schema(description = "Bilet stracił ważność – po seansie")
     EXPIRED,
 
-    @Schema(description = "Bilet jest w trakcie przetwarzania – np. podczas zakupu")
-    TO_BE_CALCULATED
+    @Schema(description = "Bilet oczekuje na aktywacje 15 minut przed seansem")
+    WAITING_FOR_ACTIVATION
 }

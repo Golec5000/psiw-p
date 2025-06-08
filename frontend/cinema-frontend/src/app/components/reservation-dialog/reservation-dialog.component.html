@@ -1,14 +1,19 @@
 <div class="p-6 text-center">
-  <h2 class="text-2xl font-semibold mb-6 text-gray-800">Rezerwacja miejsc</h2>
+  <h2 *ngIf="!ticketResponse" class="text-2xl font-semibold mb-6 text-gray-800">
+    Podaj dane do rezerwacji
+  </h2>
 
-  <div *ngIf="!result; else summary">
+  <h2 *ngIf="ticketResponse" class="text-2xl font-semibold mb-6 text-gray-800">
+    Podsumowanie rezerwacji
+  </h2>
+
+  <div *ngIf="!ticketResponse">
     <form
       [formGroup]="form"
       (ngSubmit)="submit()"
       class="space-y-4 max-w-md mx-auto text-left"
       novalidate
     >
-      <!-- Imię -->
       <div>
         <input
           type="text"
@@ -24,7 +29,6 @@
         </div>
       </div>
 
-      <!-- Nazwisko -->
       <div>
         <input
           type="text"
@@ -42,7 +46,6 @@
         </div>
       </div>
 
-      <!-- Email -->
       <div>
         <input
           type="email"
@@ -64,10 +67,8 @@
         </div>
       </div>
 
-      <!-- Błąd ogólny -->
       <div *ngIf="error" class="text-red-500 text-sm">{{ error }}</div>
 
-      <!-- Przycisk -->
       <button
         type="submit"
         [disabled]="form.invalid || loading"
@@ -78,31 +79,14 @@
     </form>
   </div>
 
-  <!-- Podsumowanie -->
-  <ng-template #summary>
-    <div class="space-y-2 text-sm text-gray-700 max-w-md mx-auto text-left">
-      <p><strong>Kod biletu:</strong> {{ result?.ticketId }}</p>
-      <p><strong>Film:</strong> {{ result?.movieTitle }}</p>
-      <p>
-        <strong>Godzina rozpoczęcia:</strong>
-        {{ result?.screeningStartTime | date : "dd-MM-yyyy HH:mm" }}
-      </p>
-      <p *ngIf="result && result.seatNumbers">
-        <strong>Zarezerwowane miejsca:</strong>
-        {{ result.seatNumbers.join(", ") }}
-      </p>
-      <p><strong>Imię i nazwisko:</strong> {{ result?.ticketOwner }}</p>
-      <p><strong>Email:</strong> {{ result?.email }}</p>
-      <p><strong>Łączny koszt:</strong> {{ result?.price }} zł</p>
-
-      <div class="text-center mt-6">
-        <button
-          (click)="close()"
-          class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
-        >
-          Zamknij
-        </button>
-      </div>
-    </div>
-  </ng-template>
+  <div *ngIf="ticketResponse" class="mt-8 pt-6">
+    <h3 class="text-lg font-semibold mb-4 text-gray-700">Szczegóły biletu</h3>
+    <app-ticket-details [ticket]="ticketResponse" />
+    <button
+      (click)="close()"
+      class="bg-gray-600 text-white mt-5 px-4 py-2 rounded hover:bg-gray-700 transition"
+    >
+      Zamknij
+    </button>
+  </div>
 </div>

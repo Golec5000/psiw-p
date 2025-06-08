@@ -15,16 +15,22 @@ import { Router } from '@angular/router';
 import { ReservationService } from '../../services/reservation.service';
 import { SeatDto } from '../../models/seatDto';
 import { TicketResponse } from '../../models/ticketResponse';
+import { TicketDetailsComponent } from '../shared/ticket-details/ticket-details.component';
 
 @Component({
   selector: 'app-reservation-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    ReactiveFormsModule,
+    TicketDetailsComponent,
+  ],
   templateUrl: './reservation-dialog.component.html',
 })
 export class ReservationDialogComponent {
   form: FormGroup;
-  result?: TicketResponse;
+  ticketResponse?: TicketResponse;
   loading = false;
   error?: string;
 
@@ -60,10 +66,11 @@ export class ReservationDialogComponent {
       })
       .subscribe({
         next: (res) => {
-          this.result = res;
+          this.ticketResponse = res;
           this.loading = false;
+          this.dialogRef.disableClose = true;
         },
-        error: (err) => {
+        error: (_err) => {
           this.error = 'Błąd rezerwacji. Spróbuj ponownie.';
           this.loading = false;
         },

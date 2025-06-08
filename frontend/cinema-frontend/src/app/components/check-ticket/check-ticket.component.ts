@@ -6,26 +6,31 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { TicketResponse } from '../../models/ticketResponse';
+import { TicketDetailsComponent } from '../shared/ticket-details/ticket-details.component';
+import { TicketValidationService } from '../../services/ticket-validation.service';
 
 @Component({
   selector: 'app-check-ticket',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TicketDetailsComponent],
   templateUrl: './check-ticket.component.html',
 })
 export class CheckTicketComponent {
   form: FormGroup;
-  status?: string;
+  ticketResponse?: TicketResponse;
   error?: string;
 
-  constructor(private fb: FormBuilder, private http: HttpClient) {
+  constructor(
+    private fb: FormBuilder,
+    private ticketValidationService: TicketValidationService
+  ) {
     this.form = this.fb.group({
       ticketId: ['', Validators.required],
     });
 
     this.form.get('ticketId')?.valueChanges.subscribe(() => {
-      this.status = undefined;
+      this.ticketResponse = undefined;
       this.error = undefined;
     });
   }
@@ -33,20 +38,14 @@ export class CheckTicketComponent {
   submit(): void {
     if (this.form.invalid) return;
 
-    this.status = undefined;
+    this.ticketResponse = undefined;
     this.error = undefined;
 
     const ticketId = this.form.value.ticketId;
-    this.http
-      .get<string>(
-        `http://localhost:8081/psiw/api/v1/auth/ticket-validation/check-staus`,
-        {
-          params: { ticketId },
-        }
-      )
-      .subscribe({
-        next: (res) => (this.status = res),
-        error: () => (this.error = 'Nieprawidłowy identyfikator biletu'),
-      });
+
+    this.ticketValidationService.checkTicket(ticketId).subscribe({
+      next: (res) => (this.ticketResponse = res),
+      error: () => (this.error = 'Nieprawidłowy identyfikator biletu'),
+    });
   }
 }

@@ -101,7 +101,7 @@ class ReservationServiceImplTest {
         assertThat(response.movieTitle()).isEqualTo("Matrix");
         assertThat(response.screeningStartTime()).isEqualTo(screening.getStartTime());
         assertThat(response.seatNumbers()).containsExactlyInAnyOrder(100, 101);
-        assertThat(response.status()).isEqualTo(TicketStatus.VALID);
+        assertThat(response.status()).isEqualTo(TicketStatus.WAITING_FOR_ACTIVATION);
         assertThat(response.ticketId()).isNotNull();
         assertThat(response.email()).isEqualTo(email);
         assertThat(response.ticketOwner()).isEqualTo(name + " " + surname);
@@ -205,12 +205,12 @@ class ReservationServiceImplTest {
 
         Ticket saved = ticketCaptor.getValue();
         assertThat(saved.getScreening()).isEqualTo(screening);
-        assertThat(saved.getStatus()).isEqualTo(TicketStatus.VALID);
+        assertThat(saved.getStatus()).isEqualTo(TicketStatus.WAITING_FOR_ACTIVATION);
 
         assertThat(response.seatNumbers()).containsExactlyInAnyOrder(201, 202);
         assertThat(response.movieTitle()).isEqualTo("John Wick");
         assertThat(response.screeningStartTime()).isEqualTo(screening.getStartTime());
-        assertThat(response.status()).isEqualTo(TicketStatus.VALID);
+        assertThat(response.status()).isEqualTo(TicketStatus.WAITING_FOR_ACTIVATION);
         assertThat(response.email()).isEqualTo(email);
         assertThat(response.ticketOwner()).isEqualTo(name + " " + surname);
         assertThat(response.price()).isEqualTo(DEFAULT_SEAT_PRICE

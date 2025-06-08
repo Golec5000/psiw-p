@@ -110,7 +110,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .ownerName(reservationRequest.name())
                 .ownerSurname(reservationRequest.surname())
                 .ownerEmail(reservationRequest.email())
-                .status(TicketStatus.VALID)
+                .status(TicketStatus.WAITING_FOR_ACTIVATION)
                 .build();
     }
 }

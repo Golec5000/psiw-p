@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public interface TicketValidationService {
 
-    TicketStatus checkTicket(UUID ticketNumber);
+    TicketResponse checkTicket(UUID ticketNumber);
 
     TicketResponse scanTicket(UUID ticketNumber);
 

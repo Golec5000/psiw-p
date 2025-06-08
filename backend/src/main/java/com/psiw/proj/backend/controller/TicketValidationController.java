@@ -33,8 +33,8 @@ public class TicketValidationController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = TicketStatus.class))),
             @ApiResponse(responseCode = "400", description = "Nieprawidłowy identyfikator biletu", content = @Content)
     })
-    @GetMapping("/check-staus")
-    public ResponseEntity<TicketStatus> checkStaus(
+    @GetMapping("/check-status")
+    public ResponseEntity<TicketResponse> checkStatus(
             @Parameter(description = "ID biletu do sprawdzenia", example = "123e4567-e89b-12d3-a456-426614174000")
             @RequestParam UUID ticketId) {
         return ResponseEntity.ok(ticketValidationService.checkTicket(ticketId));

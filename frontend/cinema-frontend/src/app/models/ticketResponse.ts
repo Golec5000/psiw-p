@@ -50,7 +50,7 @@ export namespace TicketResponse {
     Valid: 'VALID',
     Used: 'USED',
     Expired: 'EXPIRED',
-    ToBeCalculated: 'TO_BE_CALCULATED',
+    WaitingForActivation: 'WAITING_FOR_ACTIVATION',
   } as const;
   export type StatusEnum = (typeof StatusEnum)[keyof typeof StatusEnum];
 }

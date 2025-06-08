@@ -1,4 +1,6 @@
-<div class="max-w-md mx-auto mt-10 p-6 border rounded shadow text-center">
+<div
+  class="max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl mx-auto mt-10 p-6 border rounded shadow text-center"
+>
   <h2 class="text-xl font-semibold text-gray-800 mb-4">
     Sprawdź ważność biletu
   </h2>
@@ -33,8 +35,9 @@
     </button>
   </form>
 
-  <div *ngIf="status" class="mt-6 text-lg font-medium">
-    Status biletu: {{ status }}
+  <div *ngIf="ticketResponse" class="mt-8 pt-6">
+    <h3 class="text-lg font-semibold mb-4 text-gray-700">Szczegóły biletu</h3>
+    <app-ticket-details [ticket]="ticketResponse" />
   </div>
 
   <div *ngIf="error" class="mt-6 text-red-600 text-sm">
