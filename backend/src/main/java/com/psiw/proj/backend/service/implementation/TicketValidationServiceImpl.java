@@ -39,9 +39,9 @@ public class TicketValidationServiceImpl implements TicketValidationService {
             if (!now.isBefore(start.minusMinutes(15)) && now.isBefore(end)) {
                 ticket.setStatus(TicketStatus.VALID);
                 ticketRepository.save(ticket);
-                return mapToTicketResponse(ticket, null);
+                return mapToTicketResponse(ticket);
             }
-            return mapToTicketResponse(ticket, null);
+            return mapToTicketResponse(ticket);
         }
 
         // VALID
@@ -49,13 +49,13 @@ public class TicketValidationServiceImpl implements TicketValidationService {
             if (now.isAfter(end) || now.isEqual(end)) {
                 ticket.setStatus(TicketStatus.EXPIRED);
                 ticketRepository.save(ticket);
-                return mapToTicketResponse(ticket, null);
+                return mapToTicketResponse(ticket);
             }
-            return mapToTicketResponse(ticket, null);
+            return mapToTicketResponse(ticket);
         }
 
         // 3) pozostałe statusy (USED, EXPIRED itd.) zwracamy bez zmian
-        return mapToTicketResponse(ticket, null);
+        return mapToTicketResponse(ticket);
     }
 
     @Override
@@ -73,10 +73,10 @@ public class TicketValidationServiceImpl implements TicketValidationService {
         ticket.setStatus(TicketStatus.USED);
         Ticket updated = ticketRepository.save(ticket);
 
-        return mapToTicketResponse(updated, null);
+        return mapToTicketResponse(updated);
     }
 
-    private TicketResponse mapToTicketResponse(Ticket ticket, @Nullable TicketStatus status) {
+    private TicketResponse mapToTicketResponse(Ticket ticket) {
         List<Integer> seats = ticket.getTicketSeats().stream()
                 .map(ts -> ts.getSeat().getSeatNumber())
                 .toList();
@@ -86,7 +86,7 @@ public class TicketValidationServiceImpl implements TicketValidationService {
                 .seatNumbers(seats)
                 .movieTitle(ticket.getScreening().getMovie().getTitle())
                 .screeningStartTime(ticket.getScreening().getStartTime())
-                .status(status == null ? ticket.getStatus() : status)
+                .status(ticket.getStatus())
                 .email(ticket.getOwnerEmail())
                 .ticketOwner(ticket.getOwnerName() + " " + ticket.getOwnerSurname())
                 .price(ticket.getTicketPrice())

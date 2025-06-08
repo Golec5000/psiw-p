@@ -1,0 +1,44 @@
+<div
+  class="max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl mx-auto mt-10 p-6 border rounded shadow text-center"
+>
+  <h2 class="text-xl font-semibold text-gray-800 mb-4">Skasuj bilet</h2>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+    novalidate
+    class="space-y-4 text-left"
+  >
+    <input
+      type="text"
+      formControlName="ticketId"
+      placeholder="Wprowadź kod biletu"
+      class="w-full border border-gray-300 rounded px-3 py-2"
+    />
+    <div
+      *ngIf="
+        form.controls['ticketId'].touched && form.controls['ticketId'].invalid
+      "
+      class="text-red-500 text-sm"
+    >
+      Kod biletu jest wymagany
+    </div>
+
+    <button
+      type="submit"
+      [disabled]="form.invalid"
+      class="w-full bg-indigo-700 text-white py-2 rounded hover:bg-indigo-800 transition disabled:opacity-50"
+    >
+      Skasuj
+    </button>
+  </form>
+
+  <div *ngIf="ticketResponse" class="mt-8 pt-6">
+    <h3 class="text-lg font-semibold mb-4 text-gray-700">Szczegóły biletu</h3>
+    <app-ticket-details [ticket]="ticketResponse" />
+  </div>
+
+  <div *ngIf="error" class="mt-6 text-red-600 text-sm">
+    {{ error }}
+  </div>
+</div>

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { TicketResponse } from '../models/ticketResponse';
 import { Observable } from 'rxjs';
 
@@ -13,5 +13,14 @@ export class TicketValidationService {
     return this.http.get<TicketResponse>(`${this.baseUrl}/check-status`, {
       params: { ticketId },
     });
+  }
+
+  scanTicket(ticketId: string): Observable<TicketResponse> {
+    const params = new HttpParams().set('ticketId', ticketId);
+    return this.http.put<TicketResponse>(
+      `${this.baseUrl}/scan`,
+      {},
+      { params }
+    );
   }
 }
