@@ -154,19 +154,36 @@ public class DBInit {
         for (Movie movie : movies) {
             for (int dayOffset = 0; dayOffset <= 7; dayOffset++) {
                 for (Integer hour : startHours) {
-                    Room room = rooms.get(roomIndex.getAndIncrement() % rooms.size());
                     LocalDateTime startTime = startDate.plusDays(dayOffset).atTime(hour, 0);
-                    Duration duration = Duration.ofMinutes(100 + random.nextInt(41)); // 100–140 min
+                    Duration duration = Duration.ofMinutes(100 + random.nextInt(41));
 
+                    Room room1 = rooms.get(roomIndex.getAndIncrement() % rooms.size());
                     screenings.add(Screening.builder()
                             .movie(movie)
-                            .room(room)
+                            .room(room1)
                             .startTime(startTime)
                             .duration(duration)
                             .build());
 
                     log.info("Screening: {} in room {} at {} for {}min",
-                            movie.getTitle(), room.getRoomNumber(), startTime, duration.toMinutes());
+                            movie.getTitle(), room1.getRoomNumber(), startTime, duration.toMinutes());
+
+                    if (random.nextDouble() < 0.6) {
+                        Room room2;
+                        do {
+                            room2 = rooms.get(random.nextInt(rooms.size()));
+                        } while (room2.equals(room1));
+
+                        screenings.add(Screening.builder()
+                                .movie(movie)
+                                .room(room2)
+                                .startTime(startTime)
+                                .duration(duration)
+                                .build());
+
+                        log.info("Additional overlapping screening: {} in room {} at {}",
+                                movie.getTitle(), room2.getRoomNumber(), startTime);
+                    }
                 }
             }
         }

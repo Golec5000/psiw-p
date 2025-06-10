@@ -12,22 +12,14 @@ import { MovieDetailsDialogComponent } from '../shared/movie-details-dialog/movi
   selector: 'app-repertoire',
   standalone: true,
   templateUrl: './repertoire.component.html',
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    MatDialogModule, // ✅ Dodajemy Material dialog
-  ],
+  imports: [CommonModule, FormsModule, RouterLink, MatDialogModule],
 })
 export class RepertoireComponent {
   selectedDate: string = new Date().toISOString().split('T')[0];
   movies: MovieResponse[] = [];
   readonly hours = Array.from({ length: 13 }, (_, i) => i + 10);
 
-  constructor(
-    private movieService: MovieService,
-    private dialog: MatDialog // ✅ Wstrzykujemy MatDialog
-  ) {
+  constructor(private movieService: MovieService, private dialog: MatDialog) {
     this.fetchMovies();
   }
 
@@ -70,11 +62,18 @@ export class RepertoireComponent {
     return grouped;
   }
 
-  // ✅ Funkcja otwierająca dialog
   openMovieDetails(movie: MovieResponse): void {
     this.dialog.open(MovieDetailsDialogComponent, {
       data: movie,
       width: '500px',
     });
+  }
+
+  getDurationWidthStyle(durationInMinutes: number): { [key: string]: string } {
+    const pixelsPerMinute = 1.5;
+    const width = durationInMinutes * pixelsPerMinute;
+    return {
+      width: `${width}px`,
+    };
   }
 }

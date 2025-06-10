@@ -12,17 +12,17 @@
   </div>
 
   <div class="overflow-x-auto">
-    <table class="min-w-full text-sm">
+    <table class="table-fixed min-w-full text-sm border-collapse">
       <thead>
         <tr>
           <th
-            class="text-left px-4 py-2 w-1/5 text-gray-500 uppercase text-xs tracking-wide"
+            class="text-left px-4 py-2 text-gray-500 uppercase text-xs tracking-wide w-[200px]"
           >
             Film
           </th>
           <ng-container *ngFor="let hour of hours">
             <th
-              class="text-center px-2 py-2 text-gray-500 uppercase text-xs tracking-wide"
+              class="text-center px-2 py-2 text-gray-500 uppercase text-xs tracking-wide w-[100px]"
             >
               {{ hour }}:00
             </th>
@@ -31,7 +31,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let movie of movies" class="border-t">
-          <td class="px-4 py-4 align-top">
+          <td class="px-4 py-4 align-top w-[200px]">
             <button
               (click)="openMovieDetails(movie)"
               class="text-base font-semibold text-indigo-700 hover:underline transition cursor-pointer bg-transparent border-0 p-0"
@@ -41,7 +41,7 @@
           </td>
 
           <ng-container *ngFor="let hour of hours">
-            <td class="align-top px-2 py-4">
+            <td class="align-top px-2 py-4 w-[100px]">
               <div class="flex flex-col gap-1">
                 <ng-container
                   *ngFor="
@@ -54,15 +54,18 @@
                     *ngIf="isPastScreening(screening.startTime); else active"
                   >
                     <span
-                      class="px-3 py-1 text-xs rounded-full font-medium bg-gray-400 text-gray-700 pointer-events-none shadow whitespace-nowrap"
+                      [ngStyle]="getDurationWidthStyle(screening.duration)"
+                      class="px-3 py-1 text-xs rounded-full font-medium bg-gray-400 text-gray-700 pointer-events-none shadow whitespace-nowrap inline-block text-center"
                     >
                       {{ formatTime(screening.startTime) }}
                     </span>
                   </ng-container>
+
                   <ng-template #active>
                     <a
+                      [ngStyle]="getDurationWidthStyle(screening.duration)"
                       [routerLink]="['/reservation', screening.id]"
-                      class="px-3 py-1 text-xs rounded-full font-medium bg-emerald-600 text-white hover:bg-emerald-700 shadow transition whitespace-nowrap"
+                      class="px-3 py-1 text-xs rounded-full font-medium bg-emerald-600 text-white hover:bg-emerald-700 shadow transition whitespace-nowrap inline-block text-center"
                     >
                       {{ formatTime(screening.startTime) }}
                     </a>
