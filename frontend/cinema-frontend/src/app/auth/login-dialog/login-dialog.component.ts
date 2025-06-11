@@ -18,6 +18,7 @@ import { AuthService } from '../auth.service';
 export class LoginDialogComponent {
   form: FormGroup;
   error: string | null = null;
+  loading = false;
 
   constructor(
     private fb: FormBuilder,
@@ -33,9 +34,15 @@ export class LoginDialogComponent {
   login() {
     if (this.form.invalid) return;
 
+    this.loading = true;
+    this.error = null;
+
     const { username, password } = this.form.value;
     this.authService.login(username, password).subscribe({
-      next: () => this.dialogRef.close(true),
+      next: () => {
+        this.loading = false;
+        this.dialogRef.close(true);
+      },
       error: () => (this.error = 'Błędne dane logowania'),
     });
   }

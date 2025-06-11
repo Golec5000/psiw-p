@@ -45,7 +45,14 @@ export class ScanTicketComponent {
 
     this.ticketValidationService.scanTicket(ticketId).subscribe({
       next: (res) => (this.ticketResponse = res),
-      error: () => (this.error = 'Nieprawidłowy identyfikator biletu'),
+      error: (err) => {
+        if (err.status === 404) {
+          this.error =
+            'Nie znaleziono aktywnego biletu o podanym identyfikatorze';
+        } else {
+          this.error = 'Nieprawidłowy identyfikator biletu';
+        }
+      },
     });
   }
 }

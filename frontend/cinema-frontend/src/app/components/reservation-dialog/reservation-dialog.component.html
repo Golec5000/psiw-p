@@ -72,7 +72,7 @@
       <button
         type="submit"
         [disabled]="form.invalid || loading"
-        class="w-full bg-indigo-700 text-white py-2 rounded hover:bg-indigo-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full bg-indigo-700 text-white py-2 rounded hover:bg-indigo-800 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Zatwierdź
       </button>
@@ -84,7 +84,7 @@
     <app-ticket-details [ticket]="ticketResponse" />
     <button
       (click)="close()"
-      class="bg-gray-600 text-white mt-5 px-4 py-2 rounded hover:bg-gray-700 transition"
+      class="bg-gray-600 text-white mt-5 px-4 py-2 rounded hover:bg-gray-700 transition cursor-pointer"
     >
       Zamknij
     </button>

@@ -9,7 +9,6 @@
     </p>
   </div>
 
-  <!-- Ekran -->
   <div
     class="mx-auto w-3/4 h-10 mb-10 rounded-b-3xl shadow-lg bg-gradient-to-b from-gray-300 to-gray-500 text-center text-gray-800 font-medium flex items-center justify-center"
   >
@@ -49,7 +48,7 @@
 
   <div class="mt-6 text-center" *ngIf="!isStaff">
     <button
-      class="bg-indigo-700 text-white px-6 py-3 rounded hover:bg-indigo-800 transition shadow-md"
+      class="bg-indigo-700 text-white px-6 py-3 rounded hover:bg-indigo-800 transition shadow-md cursor-pointer"
       [disabled]="selectedSeats.length === 0"
       (click)="openReservationDialog()"
     >
