@@ -9,15 +9,19 @@ import com.psiw.proj.backend.utils.responseDto.TicketResponse;
 import jakarta.annotation.Nullable;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TicketValidationServiceImpl implements TicketValidationService {
 
     private final TicketRepository ticketRepository;
@@ -29,9 +33,14 @@ public class TicketValidationServiceImpl implements TicketValidationService {
         Ticket ticket = ticketRepository.findById(ticketNumber)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket not found: " + ticketNumber));
 
-        LocalDateTime now = LocalDateTime.now(clock);
+        ZoneId zone = ZoneId.of("UTC+2");
+        LocalDateTime now = ZonedDateTime.now(clock.withZone(zone)).toLocalDateTime();
         LocalDateTime start = ticket.getScreening().getStartTime();
         LocalDateTime end = start.plus(ticket.getScreening().getDuration());
+
+        log.info("Start: {}", start);
+        log.info("End: {}", end);
+        log.info("Now: {}", now);
 
         // WAITING_FOR_ACTIVATION
         if (ticket.getStatus() == TicketStatus.WAITING_FOR_ACTIVATION) {
